@@ -81,7 +81,7 @@ main{padding:14px 16px 40px}
 .dcell .note-item.holiday{background:var(--hol);border-color:var(--hol-b);border-left-color:var(--hol-b);font-weight:600}
 .slot.ooo.hol{background:repeating-linear-gradient(45deg,var(--hol) 0 6px,transparent 6px 12px)}
 .day.today{background:var(--today)}
-.slot{flex:1;min-height:48px;padding:16px 4px 4px;position:relative;display:flex;flex-direction:column;gap:3px}
+.slot{flex:1 0 auto;min-height:48px;padding:16px 4px 4px;position:relative;display:flex;flex-direction:column;gap:3px}
 .slot+.slot{border-top:1px dashed var(--line)}
 .slot .lbl{position:absolute;left:5px;top:2px;font-size:10px;color:var(--muted);letter-spacing:.5px}
 .slot .add{position:absolute;right:3px;top:1px;border:0;background:none;color:var(--muted);cursor:pointer;opacity:0;font-size:15px;line-height:1;padding:0 3px}
@@ -168,6 +168,10 @@ input.pin{letter-spacing:.6em;font-size:20px!important;text-align:center;font-fa
 /* roles: users don't see admin controls */
 .is-user .admin-only{display:none!important}
 body:not(.is-user) .user-only{display:none!important}
+.hbtn{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:3px 9px;cursor:pointer;font-size:12px;color:var(--ink)}
+.hbtn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.hbtn:disabled{opacity:.4;cursor:default}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:9px 16px;border-radius:8px;font-size:13px;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.2);max-width:90vw}
 .rolechip{font-size:11px;padding:1px 7px;border-radius:999px;background:var(--accent-soft);color:var(--accent);margin-left:4px}
 /* notes thread */
 .nthread{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto;margin-bottom:6px}
@@ -191,6 +195,7 @@ body:not(.is-user) .user-only{display:none!important}
     <span id="syncDot" class="dot"></span><span id="syncText">Not connected</span>
     <button class="link" data-act="user" title="My account · change PIN">👤 <span id="who"></span></button>
     <button class="link" data-act="logout">Log out</button>
+    <button class="hbtn" data-act="undo" id="undoBtn" disabled>↶ Undo</button><button class="hbtn" data-act="redo" id="redoBtn" disabled>↷ Redo</button>
     <button class="link" data-act="sync">Sync now</button>
     <details class="menu"><summary title="More">⋯</summary><div>
       <button data-act="help">How to use</button>
@@ -265,19 +270,21 @@ body:not(.is-user) .user-only{display:none!important}
 
 <dialog id="dlg"></dialog>
 <div id="connect" class="overlay"><div class="box" id="connectBox"></div></div>
+<div id="toast" hidden></div>
 <div id="login" class="overlay" hidden><div class="box" id="loginBox"></div></div>
 <input type="file" id="importFile" accept=".json,application/json" hidden>
 
 <script>
 'use strict';
 /* ---------- constants & helpers ---------- */
+const UNDO_MAX=20, UNDO_DAYS=7;
 const DATA_FILE='team-planner-data.json', LS_DATA='tp-local-data', LS_PREF='tp-prefs', SS_SESSION='tp-session', LS_LAST='tp-last-user', IDLE_MIN=30;
 const PALETTE=['#2f6fde','#d9534f','#2e8b57','#c98a1a','#7b4fd0','#0f8a9d','#c2410c','#be185d','#4d7c0f','#475569','#0369a1','#9333ea'];
 const PRI={High:{c:'#d9534f',r:0},Medium:{c:'#e0a03a',r:1},Low:{c:'#6b9c6b',r:2}};
 const pri=p=>PRI[p]||PRI.Medium;
 const DAYN=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const COLS=['staff','projects','tasks','blocks','absences','rules','weekly','daily','notes'];
+const COLS=['staff','projects','tasks','blocks','absences','rules','weekly','daily','notes','undo'];
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -295,7 +302,7 @@ const initials=n=>String(n||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice
 const isWeekday=s=>{const w=parse(s).getDay();return w>0&&w<6;};
 
 /* ---------- state ---------- */
-const emptyDB=()=>({schema:1,staff:[],projects:[],tasks:[],blocks:[],absences:[],rules:[],weekly:[],daily:[],notes:[],log:[]});
+const emptyDB=()=>({schema:1,staff:[],projects:[],tasks:[],blocks:[],absences:[],rules:[],weekly:[],daily:[],notes:[],undo:[],log:[]});
 let DB=emptyDB(), mode=null, dirHandle=null;
 let me='', meId='';
 let prefs={weekends:false,sidebar:true,project:'',tab:'cal'};
@@ -310,10 +317,61 @@ const staffList=()=>live('staff').sort((a,b)=>(a.order??0)-(b.order??0)||a.name.
 const staffName=id=>{const s=get('staff',id);return s?s.name+(s.deleted?' (removed)':''):'?';};
 const staffColor=id=>get('staff',id)?.color||'#98a1b0';
 const proj=id=>id?get('projects',id):null;
-function put(c,rec){rec.updatedAt=Date.now();rec.updatedBy=me;const i=DB[c].findIndex(r=>r.id===rec.id);if(i<0)DB[c].push(rec);else DB[c][i]=rec;return rec;}
+/* ---------- undo / redo ----------
+   'shadow' holds each record as it was after the last saved change. put() copies the
+   pre-change version into the open transaction; log()/commit() closes the transaction
+   into one undo entry (stored in the shared file, per person, last ${UNDO_MAX}, ${UNDO_DAYS} days). */
+const shadow=new Map(),txn=new Map();let applying=false;
+const skey=(c,id)=>c+'|'+id;
+const clone=o=>o==null?null:JSON.parse(JSON.stringify(o));
+function rebuildShadow(){shadow.clear();for(const c of COLS){if(c==='undo')continue;for(const r of DB[c])shadow.set(skey(c,r.id),JSON.stringify(r));}}
+function put(c,rec){
+  const k=skey(c,rec.id);
+  if(!applying&&!txn.has(k))txn.set(k,{c,id:rec.id,before:shadow.get(k)??null});
+  rec.updatedAt=Date.now();rec.updatedBy=me;const i=DB[c].findIndex(r=>r.id===rec.id);if(i<0)DB[c].push(rec);else DB[c][i]=rec;
+  shadow.set(k,JSON.stringify(rec));return rec;
+}
+function finalizeTxn(msg){
+  if(applying||!txn.size||!meId){txn.clear();return;}
+  const changes=[...txn.values()].map(x=>({c:x.c,id:x.id,before:x.before?JSON.parse(x.before):null,after:clone(get(x.c,x.id))}))
+    .filter(ch=>{if(!ch.after)return false;const strip=o=>{const{updatedAt,updatedBy,...r}=o||{};return JSON.stringify(r);};return !ch.before||strip(ch.before)!==strip(ch.after);});
+  txn.clear();if(!changes.length)return;
+  const now=Date.now();
+  for(const u of DB.undo)if(!u.deleted&&u.userId===meId&&u.undone){u.deleted=true;u.changes=[];u.updatedAt=now;}  /* a new change clears your redo history */
+  DB.undo.push({id:uid(),userId:meId,role:meRec()?.role||'user',ts:now,updatedAt:now,msg,changes,undone:false,stamps:changes.map(ch=>ch.after.updatedAt)});
+  const mine=DB.undo.filter(u=>!u.deleted&&u.userId===meId&&!u.undone).sort((a,b)=>b.ts-a.ts);
+  for(const u of mine.slice(UNDO_MAX)){u.deleted=true;u.changes=[];u.updatedAt=now;}
+}
+const myUndo=()=>meId?DB.undo.filter(u=>!u.deleted&&u.userId===meId&&!u.undone).sort((a,b)=>b.ts-a.ts)[0]:null;
+const myRedo=()=>meId?DB.undo.filter(u=>!u.deleted&&u.userId===meId&&u.undone).sort((a,b)=>(b.undoneAt||0)-(a.undoneAt||0))[0]:null;
+function restoreRec(c,obj){const rec=clone(obj);const i=DB[c].findIndex(r=>r.id===rec.id);if(i<0)DB[c].push(rec);else DB[c][i]=rec;put(c,rec);}
+function undoRedo(redo){
+  const u=redo?myRedo():myUndo();if(!u)return;
+  const verb=redo?'Redo':'Undo';
+  if(u.role==='admin'&&!isAdmin()){alert(`Can't ${verb.toLowerCase()} "${u.msg}": it needed administrator rights, which you no longer have.`);return;}
+  /* has anyone changed these items since? */
+  const moved=u.changes.filter((ch,i)=>(get(ch.c,ch.id)?.updatedAt??null)!==(u.stamps?.[i]??null));
+  if(moved.length){
+    const who=[...new Set(moved.map(ch=>get(ch.c,ch.id)?.updatedBy||'someone'))].join(', ');
+    const when=Math.max(...moved.map(ch=>get(ch.c,ch.id)?.updatedAt||0));
+    if(!confirm(`${verb} "${u.msg}"?\n\n${who} changed ${moved.length===1?'this item':moved.length+' of these items'} after you (latest ${fmtTs(when)}). ${verb==='Undo'?'Undoing':'Redoing'} will overwrite that later change.\n\n${verb} anyway?`))return;
+  }
+  applying=true;
+  try{
+    for(const ch of u.changes){
+      if(redo)restoreRec(ch.c,ch.after);
+      else if(ch.before)restoreRec(ch.c,ch.before);
+      else{const cur=get(ch.c,ch.id);if(cur&&!cur.deleted){cur.deleted=true;cur.undoneCreate=true;put(ch.c,cur);}}
+    }
+    u.undone=!redo;u.undoneAt=redo?null:Date.now();u.updatedAt=Date.now();u.stamps=u.changes.map(ch=>get(ch.c,ch.id)?.updatedAt??null);
+    log(`${redo?'Redid':'Undid'}: ${u.msg}`,false);
+  }finally{applying=false;txn.clear();}
+  scheduleSave();render();toast(`${redo?'Redone':'Undone'}: ${u.msg}`);
+}
+function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,3500);}
 function del(c,id){const r=get(c,id);if(r){r.deleted=true;put(c,r);}}
-function log(msg){DB.log.push({id:uid(),ts:Date.now(),user:me||'?',msg});}
-function commit(msg){if(msg)log(msg);scheduleSave();render();}
+function log(msg,undoable=true){DB.log.push({id:uid(),ts:Date.now(),user:me||'?',msg});if(undoable)finalizeTxn(msg);else txn.clear();}
+function commit(msg,undoable=true){if(msg)log(msg,undoable);else finalizeTxn('Other edits');scheduleSave();render();}
 
 /* merge two copies record-by-record: newest updatedAt wins, deletions are kept as tombstones */
 function mergeDB(a,b){
@@ -321,6 +379,7 @@ function mergeDB(a,b){
   for(const c of COLS){const m=new Map();for(const r of [...(a[c]||[]),...(b[c]||[])]){const e=m.get(r.id);if(!e||(r.updatedAt||0)>(e.updatedAt||0))m.set(r.id,r);}out[c]=[...m.values()];}
   const lm=new Map();for(const r of [...(a.log||[]),...(b.log||[])])lm.set(r.id,r);
   out.log=[...lm.values()].sort((x,y)=>x.ts-y.ts).slice(-5000);
+  const keep=Date.now()-UNDO_DAYS*864e5;out.undo=out.undo.filter(u=>u.ts>keep);
   return out;
 }
 
@@ -369,13 +428,14 @@ function occurs(r,d){
 const FREQ={weekly:'Weekly',biweekly:'Every 2 weeks',monthly:'Monthly'};
 function ruleText(r){const nth=['1st','2nd','3rd','4th','5th'][Math.ceil(parse(firstOcc(r)).getDate()/7)-1];return r.freq==='monthly'?`${nth} ${DAYN[r.weekday]} of each month, ${r.slot}`:`${FREQ[r.freq]} on ${DAYN[r.weekday]} ${r.slot}`;}
 /* creates the week's occurrences (only when the user clicks the button); generated records get an old timestamp so any real edit always wins a merge */
-function pendingRecurring(ws){let n=0;for(const r of live('rules'))for(let i=0;i<7;i++){const d=addDays(ws,i);if(occurs(r,d)&&!get('tasks','r_'+r.id+'_'+d))n++;}return n;}
+const recurExists=tid=>{const t=get('tasks',tid);return !!t&&!(t.deleted&&t.undoneCreate);};
+function pendingRecurring(ws){let n=0;for(const r of live('rules'))for(let i=0;i<7;i++){const d=addDays(ws,i);if(occurs(r,d)&&!recurExists('r_'+r.id+'_'+d))n++;}return n;}
 function ensureRecurring(ws){
   let made=0;
   for(const r of live('rules')){
     for(let i=0;i<7;i++){
       const d=addDays(ws,i);if(!occurs(r,d))continue;
-      const tid='r_'+r.id+'_'+d;if(get('tasks',tid))continue;
+      const tid='r_'+r.id+'_'+d;if(recurExists(tid))continue;
       const t=put('tasks',{id:tid,ruleId:r.id,title:r.title,notes:r.notes||'',projectId:r.projectId||'',priority:r.priority||'Medium',duration:+r.duration||1,deadline:d,createdAt:parse(d).getTime(),completedAt:null});t.updatedAt=1;
       const staff=(r.staffIds||[]).filter(id=>{const s=get('staff',id);return s&&!s.deleted;});
       if(staff.length){let dd=d,s=r.slot||'AM';for(let k=0;k<t.duration;k++){const b=put('blocks',{id:'b_'+tid+'_'+k,taskId:tid,date:dd,slot:s,staffIds:staff,done:false});b.updatedAt=1;[dd,s]=nextSlot(dd,s);}}
@@ -408,7 +468,7 @@ async function save(){
   if(saving){again=true;return;}
   saving=true;
   try{
-    if(mode==='folder'){const {data}=await readDisk();DB=mergeDB(data,DB);await backup();await writeDisk(DB);}
+    if(mode==='folder'){const {data}=await readDisk();DB=mergeDB(data,DB);rebuildShadow();await backup();await writeDisk(DB);}
     else if(mode==='local'){localStorage.setItem(LS_DATA,JSON.stringify(DB));}
     pendingSave=false;setStatus('ok',(mode==='folder'?'Saved ':'Saved locally ')+fmtTs(Date.now()).slice(11));
     if(dragging||modalOpen)deferred=true;else render();
@@ -419,7 +479,7 @@ async function poll(force){
   if(mode!=='folder'||saving||!dirHandle)return;
   try{
     const f=await (await dirHandle.getFileHandle(DATA_FILE)).getFile();const sig=f.lastModified+':'+f.size;
-    if(sig!==lastSig||force){const data=JSON.parse(await f.text());DB=mergeDB(data,DB);lastSig=sig;if(!pendingSave)setStatus('ok','Synced '+fmtTs(Date.now()).slice(11));if(dragging||modalOpen)deferred=true;else render();}
+    if(sig!==lastSig||force){const data=JSON.parse(await f.text());DB=mergeDB(data,DB);rebuildShadow();lastSig=sig;if(!pendingSave)setStatus('ok','Synced '+fmtTs(Date.now()).slice(11));if(dragging||modalOpen)deferred=true;else render();}
   }catch(e){/* file mid-write or drive briefly unavailable: retry next tick */}
 }
 setInterval(()=>poll(++pollCount%15===0),4000);
@@ -438,7 +498,7 @@ async function showConnect(){
   $('#connect').hidden=false;
   if(saved)$('#cReuse').onclick=()=>connectFolder(saved);
   if(supported)$('#cPick').onclick=async()=>{try{const h=await showDirectoryPicker({id:'team-planner',mode:'readwrite'});await connectFolder(h);}catch(e){if(e.name!=='AbortError')alert('Could not open folder: '+e.message);}};
-  $('#cLocal').onclick=()=>{mode='local';try{DB=mergeDB(JSON.parse(localStorage.getItem(LS_DATA)||'null')||emptyDB(),emptyDB());}catch{DB=emptyDB();}setStatus('ok','This browser only');afterConnect();};
+  $('#cLocal').onclick=()=>{mode='local';try{DB=mergeDB(JSON.parse(localStorage.getItem(LS_DATA)||'null')||emptyDB(),emptyDB());}catch{DB=emptyDB();}rebuildShadow();setStatus('ok','This browser only');afterConnect();};
 }
 async function connectFolder(h){
   try{
@@ -446,7 +506,7 @@ async function connectFolder(h){
     if(p!=='granted')p=await h.requestPermission({mode:'readwrite'});
     if(p!=='granted'){alert('Edit permission is needed to use the shared folder.');return;}
     dirHandle=h;mode='folder';try{await idbSet('dir',h);}catch{}
-    const {data,sig}=await readDisk();DB=mergeDB(data,emptyDB());lastSig=sig;
+    const {data,sig}=await readDisk();DB=mergeDB(data,emptyDB());rebuildShadow();lastSig=sig;
     setStatus('ok','Connected to “'+h.name+'”');afterConnect();
   }catch(e){alert('Could not use that folder: '+e.message);}
 }
@@ -512,7 +572,7 @@ function showLogin(msg){
     const f=$('#lf');f.uname.focus();
     f.onsubmit=e=>{e.preventDefault();const n=f.uname.value.trim();if(!n)return err('Enter your name.');const pr=pinProblem(f.pin.value,f.pin2.value);if(pr)return err(pr);
       me=n;const r=put('staff',{id:uid(),name:n,color:PALETTE[0],order:0,role:'admin'});setPin(r,f.pin.value);put('staff',r);
-      log(`${n} set up the planner as administrator`);scheduleSave();startSession(r);};
+      log(`${n} set up the planner as administrator`,false);scheduleSave();startSession(r);};
     return;
   }
   let last='';try{last=localStorage.getItem(LS_LAST)||'';}catch{}
@@ -530,7 +590,7 @@ function showLogin(msg){
     if(!r.pinHash){
       const pr=pinProblem(f.pin.value,f.pin2.value);if(pr)return err(pr);
       const boot=!anyAdmin();me=r.name;setPin(r,f.pin.value);r.role=boot?'admin':(r.role||'user');put('staff',r);
-      log(`${r.name} created a PIN${boot?' and became administrator':''}`);scheduleSave();startSession(r);return;
+      log(`${r.name} created a PIN${boot?' and became administrator':''}`,false);scheduleSave();startSession(r);return;
     }
     if(hashPin(r.pinSalt,f.pin.value)!==r.pinHash){
       fails[r.id]=(fails[r.id]||0)+1;f.pin.value='';
@@ -547,7 +607,7 @@ function accountModal(){
   {ok:'Change PIN',onOk:d=>{
     if(hashPin(r.pinSalt,val(d,'cur'))!==r.pinHash){alert('Current PIN is incorrect.');return false;}
     const pr=pinProblem(val(d,'p1'),val(d,'p2'));if(pr){alert(pr);return false;}
-    setPin(r,val(d,'p1'));put('staff',r);commit(`${r.name} changed their PIN`);alert('PIN changed.');},
+    setPin(r,val(d,'p1'));put('staff',r);commit(`${r.name} changed their PIN`,false);alert('PIN changed.');},
    extra:[{label:'Log out',fn:()=>{setTimeout(()=>logout(),0);}}]});
 }
 ['mousemove','keydown','click','scroll','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{lastAct=Date.now();},{passive:true}));
@@ -680,7 +740,7 @@ function staffModal(){
         s.role=nr;put('staff',s);log(`Changed ${s.name}'s role to ${roleName(nr)}`);scheduleSave();return;}
       if(!e.target.dataset.f)return;const s=get('staff',r.dataset.id);const old=s.name;s[e.target.dataset.f]=e.target.value.trim()||s[e.target.dataset.f];put('staff',s);log(e.target.dataset.f==='name'?`Renamed ${old} to ${s.name}`:`Changed colour for ${s.name}`);scheduleSave();};
     box.onclick=e=>{const r=e.target.closest('.srow');if(!r)return;const id=r.dataset.id;
-      if(e.target.dataset.mv){const l=staffList();l.forEach((s,i)=>s.order=i);const i=l.findIndex(s=>s.id===id),j=i+ +e.target.dataset.mv;if(j<0||j>=l.length)return;[l[i].order,l[j].order]=[l[j].order,l[i].order];put('staff',l[i]);put('staff',l[j]);scheduleSave();box.innerHTML=rows();}
+      if(e.target.dataset.mv){const l=staffList();l.forEach((s,i)=>s.order=i);const i=l.findIndex(s=>s.id===id),j=i+ +e.target.dataset.mv;if(j<0||j>=l.length)return;[l[i].order,l[j].order]=[l[j].order,l[i].order];put('staff',l[i]);put('staff',l[j]);log(`Reordered staff (${l[i].name}, ${l[j].name})`);scheduleSave();box.innerHTML=rows();}
       if(e.target.dataset.reset){const s=get('staff',id);if(!confirm(`Reset ${s.name}'s PIN? They'll create a new one the next time they log in.`))return;s.pinHash='';s.pinSalt='';put('staff',s);log(`Reset ${s.name}'s PIN`);scheduleSave();box.innerHTML=rows();}
       if(e.target.dataset.rm){const s=get('staff',id);if(s.id===meId)return;if(s.role==='admin'&&staffList().filter(x=>x.role==='admin').length<=1){alert('There must be at least one administrator.');return;}if(!confirm(`Remove ${s.name}? Their unfinished half-days from today on will go back to "To schedule".`))return;
         const td=today();live('blocks').filter(b=>b.staffIds.includes(id)&&!b.done&&b.date>=td).forEach(b=>{b.staffIds=b.staffIds.filter(x=>x!==id);if(b.staffIds.length)put('blocks',b);else del('blocks',b.id);});
@@ -695,7 +755,7 @@ function projectsModal(){
     const box=d.querySelector('#prows'),nn=d.querySelector('[name=newname]');
     const add=()=>{const n=nn.value.trim();if(!n)return;put('projects',{id:uid(),name:n,color:PALETTE[(DB.projects.length+3)%PALETTE.length]});log(`Added project ${n}`);scheduleSave();nn.value='';box.innerHTML=rows();nn.focus();};
     d.querySelector('#addP').onclick=add;nn.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();add();}};
-    box.onchange=e=>{const r=e.target.closest('.srow');if(!r||!e.target.dataset.f)return;const p=get('projects',r.dataset.id);p[e.target.dataset.f]=e.target.value.trim()||p[e.target.dataset.f];put('projects',p);scheduleSave();};
+    box.onchange=e=>{const r=e.target.closest('.srow');if(!r||!e.target.dataset.f)return;const p=get('projects',r.dataset.id);p[e.target.dataset.f]=e.target.value.trim()||p[e.target.dataset.f];put('projects',p);log(`Edited project ${p.name}`);scheduleSave();};
     box.onclick=e=>{const r=e.target.closest('.srow');if(!r||!e.target.dataset.rm)return;const p=get('projects',r.dataset.id);if(!confirm(`Remove project "${p.name}"? Its tasks are kept.`))return;del('projects',p.id);log(`Removed project ${p.name}`);scheduleSave();box.innerHTML=rows();};
   }});
 }
@@ -804,6 +864,9 @@ function render(){
   if(meId&&!isAdmin()&&prefs.tab==='sum')prefs.tab='cal';
   $$('nav.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===prefs.tab));
   $$('.tab').forEach(t=>t.hidden=t.id!=='tab-'+prefs.tab);
+  const un=myUndo(),rd=myRedo();
+  $('#undoBtn').disabled=!un;$('#undoBtn').title=un?`Undo: ${un.msg} (Ctrl+Z)`:'Nothing of yours to undo';
+  $('#redoBtn').disabled=!rd;$('#redoBtn').title=rd?`Redo: ${rd.msg} (Ctrl+Y)`:'Nothing to redo';
   $('#who').innerHTML=meId?`${esc(me)}<span class="rolechip">${roleName(meRec().role)}</span>`:'';
   fillProjFilter('#calProj','All projects',prefs.project);fillProjFilter('#fProj','Any project');
   if(prefs.tab==='cal')renderCal();else if(prefs.tab==='list')renderList();else renderSummary();
@@ -969,7 +1032,7 @@ function exportLog(){csv(`change-log-${today()}.csv`,[['Time','User','Change'],.
 
 /* ---------- events ---------- */
 /* actions a regular user may perform; everything else needs an administrator */
-const USER_ACTS=new Set(['toggle','donetask','edittask','prev','next','today','sync','help','user','logout','reconnect']);
+const USER_ACTS=new Set(['undo','redo','toggle','donetask','edittask','prev','next','today','sync','help','user','logout','reconnect']);
 document.addEventListener('click',e=>{
   const tab=e.target.closest('nav.tabs button');if(tab){if(tab.dataset.tab==='sum'&&!isAdmin())return;prefs.tab=tab.dataset.tab;savePrefs();render();return;}
   const m=e.target.closest('.menu');if(!m)$$('.menu[open]').forEach(x=>x.open=false);
@@ -1010,6 +1073,8 @@ document.addEventListener('click',e=>{
     case 'exportLog':exportLog();break;
     case 'user':accountModal();break;
     case 'logout':logout();break;
+    case 'undo':undoRedo(false);break;
+    case 'redo':undoRedo(true);break;
     case 'sync':if(mode==='folder'){setStatus('busy','Syncing…');save();}else render();break;
     case 'backup':dl(`team-planner-backup-${today()}.json`,JSON.stringify(DB,null,1),'application/json');break;
     case 'import':$('#importFile').click();break;
@@ -1069,7 +1134,7 @@ $('#sumRange').addEventListener('change',renderSummary);
 $('#calProj').addEventListener('change',e=>{prefs.project=e.target.value;savePrefs();render();});
 $('#optWeekends').addEventListener('change',e=>{prefs.weekends=e.target.checked;savePrefs();render();});
 $('#jump').addEventListener('change',e=>{if(e.target.value){weekStart=mondayOf(e.target.value);render();}});
-$('#importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f||!isAdmin())return;try{const d=JSON.parse(await f.text());if(!d||!Array.isArray(d.tasks))throw new Error('Not a Team Planner data file');DB=mergeDB(d,DB);commit(`Imported data from ${f.name}`);}catch(err){alert('Import failed: '+err.message);}e.target.value='';});
+$('#importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f||!isAdmin())return;try{const d=JSON.parse(await f.text());if(!d||!Array.isArray(d.tasks))throw new Error('Not a Team Planner data file');DB=mergeDB(d,DB);rebuildShadow();commit(`Imported data from ${f.name}`);}catch(err){alert('Import failed: '+err.message);}e.target.value='';});
 
 function helpModal(){
   modal('How to use',`<div style="font-size:13px;line-height:1.55">
@@ -1077,8 +1142,16 @@ function helpModal(){
   <b>Weekly tasks</b> (column next to the names) — things a person covers all week, e.g. room preventive maintenance. No completion box. “⧉ last week” copies last week's into this week. <b>Daily joint tasks</b> (row under the dates) — lab meetings and similar; leave people unticked for everyone. Tick “Holiday” to mark everyone out of office (full or half day, single date or range). Both can be dragged to another person or day.<br><br>
   <b>Task list</b> — set priority, duration in half-days, and deadline. Drag a row onto the “Weekly calendar” tab, then drop it on a slot; multi-half-day tasks fill consecutive half-days, skipping weekends and time out of office. Recurring tasks are added to a week only when you click “↻ Add recurring tasks” in the calendar's To-schedule panel.<br><br>
   <b>Logging in & roles</b> — everyone logs in with their name and a personal 6-digit PIN (created the first time they log in). <b>Administrators</b> can do everything: assign, move and edit tasks, manage weekly/joint tasks and holidays, view the Summary tab, add or remove staff, change roles and reset PINs (Staff button). <b>Users</b> can tick tasks complete and add notes; they see the calendar and task list but can't change the schedule. 💬 shows how many notes a task has. You're logged out after ${IDLE_MIN} minutes without activity.<br><br>
+  <b>Undo / Redo</b> — ↶ Undo (Ctrl+Z) reverses <i>your own</i> most recent change; click again to go further back (up to ${UNDO_MAX} changes, kept ${UNDO_DAYS} days, and it works after logging out or on another PC). ↷ Redo (Ctrl+Y) re-applies what you undid, until you make a new change. If a colleague has edited the same item since, you'll be told who and asked before their edit is overwritten. Hover the buttons to see which change they'll affect.<br><br>
   <b>Sharing</b> — everyone opens this page in Edge or Chrome and picks the same folder. Edits save within a second and other people's changes appear within about 5 seconds. If two people edit the <i>same</i> item at the same moment, the later save wins; different items never overwrite each other. A daily copy of the data is kept in the folder's <code>backups</code> subfolder.</div>`);
 }
+
+document.addEventListener('keydown',e=>{
+  if(!meId||!(e.ctrlKey||e.metaKey)||modalOpen||e.target.closest('input,textarea,select,[contenteditable]'))return;
+  const k=e.key.toLowerCase();
+  if(k==='z'&&!e.shiftKey){e.preventDefault();undoRedo(false);}
+  else if(k==='y'||(k==='z'&&e.shiftKey)){e.preventDefault();undoRedo(true);}
+});
 
 /* ---------- start ---------- */
 render();
