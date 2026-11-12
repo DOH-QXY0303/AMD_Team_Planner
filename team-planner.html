@@ -17,12 +17,14 @@
     - People log in with their name and a personal 6-digit PIN (stored only as a salted hash).
       Administrators can do everything; Users can tick tasks complete and add notes.
     - Undo/Redo history (20 steps per person, 7 days) is kept in the data file.
+    - Validations tab: one Gantt chart per validation project, started from the lab's template.
+      Admins and each project's lead edit it; assigned tasks show as bands on the calendar.
 
   Script sections (search for "---------- name"):
     constants & helpers · state · undo / redo · tasks, blocks, absences · recurring tasks ·
     storage · yearly archives · connect / identity · login, PINs and roles · modal · notes ·
     task / block / quick-add dialogs · staff, projects, out of office · weekly & daily joint
-    tasks · recurring dialog · render · summary · exports · events · start
+    tasks · recurring dialog · render · summary · exports · validation projects (Gantt) · events · start
 -->
 <html lang="en">
   <head>
@@ -1064,6 +1066,481 @@
         flex: none;
         width: 78px;
       }
+      /* ---------- validations (Gantt) ---------- */
+      .vwrap {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      #vlist {
+        width: 230px;
+        flex: none;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px;
+        box-shadow: var(--shadow);
+        max-height: calc(100vh - 110px);
+        overflow: auto;
+      }
+      #vlist h4 {
+        margin: 14px 6px 4px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--muted);
+      }
+      #vlist .btn.wide {
+        margin: 2px 0 4px;
+      }
+      .vitem {
+        display: grid;
+        grid-template-columns: 10px 1fr auto;
+        gap: 3px 8px;
+        align-items: center;
+        width: 100%;
+        border: 0;
+        background: none;
+        text-align: left;
+        padding: 7px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        color: var(--ink);
+      }
+      .vitem:hover {
+        background: var(--bg);
+      }
+      .vitem.on {
+        background: var(--accent-soft);
+      }
+      .vitem.mine {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 650;
+      }
+      .vitem .vn {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 600;
+      }
+      .vitem .vp {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .vitem .vbar {
+        grid-column: 2 / 4;
+        height: 4px;
+        background: var(--line);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .vitem .vbar i {
+        display: block;
+        height: 100%;
+      }
+      #vmain {
+        flex: 1;
+        min-width: 0;
+      }
+      .vhead {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+        box-shadow: var(--shadow);
+      }
+      .vtitle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .vtitle h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .vmeta {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      .vmeta b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .vprog {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+        font-size: 13px;
+      }
+      .vbig {
+        position: relative;
+        display: inline-block;
+        width: 260px;
+        height: 10px;
+        background: var(--line);
+        border-radius: 5px;
+        vertical-align: middle;
+      }
+      .vbig.sm {
+        width: 140px;
+        height: 8px;
+      }
+      .vbig i {
+        display: block;
+        height: 100%;
+        border-radius: 5px;
+      }
+      .vbig em {
+        position: absolute;
+        top: -3px;
+        bottom: -3px;
+        width: 2px;
+        background: var(--ink);
+        opacity: 0.7;
+      }
+      .vtools {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+      .badge.muted {
+        background: var(--hatch);
+        color: var(--muted);
+      }
+      .ext {
+        font-size: 11px;
+        padding: 1px 7px;
+        border-radius: 999px;
+        background: var(--hatch);
+        margin-left: 3px;
+        white-space: nowrap;
+      }
+      .pctl {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .pctl input {
+        width: 110px;
+      }
+      .gwrap {
+        overflow: auto;
+        max-height: calc(100vh - 300px);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+      .gantt {
+        --lw: 702px;
+        width: calc(var(--lw) + var(--tlw));
+        position: relative;
+      }
+      .grow {
+        display: flex;
+        border-bottom: 1px solid var(--line);
+        min-height: 28px;
+      }
+      .gl {
+        position: sticky;
+        left: 0;
+        z-index: 2;
+        width: var(--lw);
+        flex: none;
+        display: flex;
+        align-items: center;
+        background: var(--panel);
+        border-right: 2px solid var(--sep);
+        font-size: 12.5px;
+      }
+      .gl > span {
+        padding: 0 6px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      .gc-t {
+        width: 250px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .gc-a {
+        width: 130px;
+      }
+      .gc-p {
+        width: 66px;
+        text-align: right;
+      }
+      .gc-d {
+        width: 92px;
+      }
+      .gc-n {
+        width: 72px;
+        text-align: center;
+      }
+      .gtt {
+        color: var(--ink);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: left;
+        padding-left: 12px;
+      }
+      .gtools {
+        display: none;
+        gap: 2px;
+        margin-left: auto;
+      }
+      .grow:hover .gtools {
+        display: inline-flex;
+      }
+      .gr {
+        position: relative;
+        width: var(--tlw);
+        flex: none;
+        background-image: linear-gradient(to right, var(--line) 1px, transparent 1px),
+          linear-gradient(to right, var(--sep) 1px, transparent 1px);
+        background-size:
+          var(--dw) 100%,
+          var(--ww) 100%;
+      }
+      .gr.edit {
+        cursor: crosshair;
+      }
+      .ghead {
+        position: sticky;
+        top: 0;
+        z-index: 4;
+      }
+      .ghead .gl {
+        z-index: 5;
+        font-size: 10.5px;
+        font-weight: 700;
+        color: var(--muted);
+        letter-spacing: 0.3px;
+      }
+      .ghead .gr {
+        background: var(--panel);
+        height: 46px;
+      }
+      .gwks,
+      .gdays {
+        position: relative;
+        height: 20px;
+      }
+      .gdays {
+        height: 26px;
+      }
+      .gwk {
+        position: absolute;
+        top: 3px;
+        font-size: 11px;
+        font-weight: 600;
+        padding-left: 4px;
+        border-left: 1px solid var(--sep);
+        height: 17px;
+        white-space: nowrap;
+      }
+      .gday {
+        position: absolute;
+        top: 1px;
+        width: var(--dw);
+        text-align: center;
+        font-size: 9px;
+        line-height: 11px;
+        color: var(--muted);
+      }
+      .gday.today {
+        background: #ffe699;
+        color: #000;
+        border-radius: 3px;
+        font-weight: 700;
+      }
+      .gday.off {
+        opacity: 0.45;
+      }
+      .gphase .gl {
+        background: var(--jt);
+        font-weight: 700;
+      }
+      .gpn {
+        padding-left: 6px !important;
+      }
+      .goff {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 12px;
+        background: var(--hatch);
+      }
+      .gtoday {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 24px;
+        background: rgba(255, 214, 0, 0.16);
+        border-left: 2px solid #e0a83a;
+      }
+      .gbar {
+        position: absolute;
+        top: 6px;
+        height: 16px;
+        border-radius: 4px;
+        background: color-mix(in srgb, var(--c) 30%, transparent);
+        border: 1px solid var(--c);
+        overflow: hidden;
+        cursor: grab;
+        z-index: 1;
+      }
+      .gbar i {
+        display: block;
+        height: 100%;
+        background: var(--c);
+      }
+      .gbar.phase {
+        top: 10px;
+        height: 8px;
+        cursor: default;
+        border-radius: 2px;
+      }
+      .gbar.late {
+        box-shadow: 0 0 0 2px var(--danger);
+      }
+      .gbar.preview {
+        opacity: 0.75;
+      }
+      .gh-l,
+      .gh-r {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 6px;
+        cursor: ew-resize;
+      }
+      .gh-l {
+        left: 0;
+      }
+      .gh-r {
+        right: 0;
+      }
+      .ghint {
+        position: absolute;
+        left: 8px;
+        top: 7px;
+        font-size: 11px;
+        color: var(--muted);
+        opacity: 0;
+        pointer-events: none;
+      }
+      .grow:hover .ghint {
+        opacity: 1;
+      }
+      /* assignment dropdown */
+      .msel {
+        position: relative;
+        display: inline-block;
+        max-width: 100%;
+      }
+      .msel > summary {
+        list-style: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        padding: 1px 4px;
+        border-radius: 5px;
+        border: 1px solid transparent;
+        max-width: 100%;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+      .msel > summary::-webkit-details-marker {
+        display: none;
+      }
+      .msel > summary:hover,
+      .msel[open] > summary {
+        border-color: var(--line);
+        background: var(--bg);
+      }
+      .msel .caret {
+        font-size: 10px;
+        color: var(--muted);
+        margin-left: 3px;
+      }
+      .msel .mpanel {
+        position: absolute;
+        left: 0;
+        top: 100%;
+        z-index: 30;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        padding: 8px 10px;
+        min-width: 220px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        white-space: nowrap;
+        font-weight: 400;
+      }
+      .msel .mh {
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      dialog .msel {
+        display: block;
+        margin: -4px 0 10px;
+      }
+      dialog .msel > summary {
+        border-color: var(--line);
+        padding: 5px 8px;
+        min-height: 32px;
+        display: flex;
+      }
+      dialog .msel .mpanel {
+        position: static;
+        box-shadow: none;
+        margin-top: 4px;
+      }
+      .gl > span.gc-a {
+        overflow: visible;
+      }
+      .grow:has(.msel[open]) .gl {
+        z-index: 6;
+      }
+      .spanrow span {
+        color: var(--muted);
+        font-size: 13px;
+        flex: none;
+      }
+      .gdn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        justify-content: flex-end;
+        width: 100%;
+      }
+      .gdn input {
+        margin: 0;
+        cursor: pointer;
+      }
+      .gc-t.gdone .gtt {
+        color: var(--muted);
+        text-decoration: line-through;
+      }
     </style>
   </head>
   <body>
@@ -1072,6 +1549,7 @@
       <nav class="tabs">
         <button data-tab="cal">Weekly calendar</button>
         <button data-tab="list">Task list</button>
+        <button data-tab="val">Validations</button>
         <button data-tab="sum" class="admin-only">Summary</button>
       </nav>
       <div class="status">
@@ -1167,8 +1645,32 @@
           half-day. Multi-half-day tasks fill consecutive half-days, skipping weekends and time out of office.
         </p>
         <div id="taskTable"></div>
+        <h3>Validation project tasks</h3>
+        <div class="toolbar">
+          <select id="fVp"></select>
+          <select id="fVpSt">
+            <option value="open">Open</option>
+            <option value="mine">Assigned to me</option>
+            <option value="overdue">Overdue</option>
+            <option value="unsched">No dates yet</option>
+            <option value="done">Completed</option>
+            <option value="all">All</option>
+          </select>
+          <span class="hint">
+            Deadline = the task's end on its Gantt chart. Drag a row onto the “Weekly calendar” tab, then onto
+            a half-day, to book hands-on work.
+          </span>
+        </div>
+        <div id="gtTable"></div>
         <h3 class="admin-only">Recurring tasks</h3>
         <div id="ruleTable" class="admin-only"></div>
+      </section>
+
+      <section class="tab" id="tab-val" hidden>
+        <div class="vwrap">
+          <aside id="vlist"></aside>
+          <div id="vmain"></div>
+        </div>
       </section>
 
       <section class="tab" id="tab-sum" hidden>
@@ -1252,6 +1754,9 @@
         "daily",
         "notes",
         "undo",
+        "vprojects",
+        "gtasks",
+        "templates",
       ];
       const $ = (s, r = document) => r.querySelector(s);
       const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -1314,6 +1819,9 @@
         daily: [],
         notes: [],
         undo: [],
+        vprojects: [],
+        gtasks: [],
+        templates: [],
         log: [],
       });
       let DB = emptyDB(),
@@ -1357,6 +1865,7 @@
         return m.get(id);
       }
       function resetIndexes() {
+        HOL = null;
         IDX = {};
         BIDX = null;
         NIDX = null;
@@ -1397,11 +1906,13 @@
         get(c, rec.id);
         IDX[c].set(rec.id, rec);
         if (c === "blocks") BIDX = null;
+        if (c === "daily") HOL = null;
         if (c === "notes") NIDX = null;
         shadow.set(k, JSON.stringify(rec));
         return rec;
       }
       function finalizeTxn(msg) {
+        if (!applying && txn.size) gtHook();
         if (applying || !txn.size || !meId) {
           txn.clear();
           return;
@@ -1620,6 +2131,7 @@
           t.completedBy = null;
           put("tasks", t);
         }
+        if (t.gtaskId) syncGtProgress(t.gtaskId);
       }
       function holidayAt(date, slot) {
         return live("daily").find(
@@ -1855,6 +2367,25 @@
         "notes",
         "color",
         "order",
+        "vpId",
+        "phaseId",
+        "gtaskId",
+        "start",
+        "end",
+        "progress",
+        "external",
+        "roleHint",
+        "halfDaysHint",
+        "supervisor",
+        "leadId",
+        "benchLeadId",
+        "status",
+        "phases",
+        "spans",
+        "roles",
+        "daysHint",
+        "tickDone",
+        "autoTicked",
       ];
       function orderKeys(r) {
         const o = {};
@@ -2536,7 +3067,7 @@
         const txt = ta && ta.value.trim();
         if (!txt) return false;
         put("notes", { id: uid(), taskId: tid, text: txt, by: me, byId: meId, ts: Date.now() });
-        log(`Added a note to "${get("tasks", tid)?.title}"`);
+        log(`Added a note to "${(get("tasks", tid) || get("gtasks", tid))?.title}"`);
         scheduleSave();
         ta.value = "";
         const th = d.querySelector(".nthread");
@@ -2555,7 +3086,7 @@
             const n = get("notes", x.dataset.delnote);
             if (!n || !confirm("Delete this note?")) return;
             del("notes", n.id);
-            log(`Deleted a note on "${get("tasks", n.taskId)?.title}"`);
+            log(`Deleted a note on "${(get("tasks", n.taskId) || get("gtasks", n.taskId))?.title}"`);
             scheduleSave();
             d.querySelector(".nthread").innerHTML = notesList(n.taskId);
           }
@@ -2660,6 +3191,7 @@
           b.doneBy = done ? b.doneBy || me : null;
           put("blocks", b);
         });
+        if (t.gtaskId) syncGtProgress(t.gtaskId);
         if (!noCommit) commit(`${done ? "Completed" : "Reopened"} "${t.title}"`);
       }
       function quickModal(staff, date, slot) {
@@ -3368,6 +3900,7 @@
         fillProjFilter("#fProj", "Any project");
         if (prefs.tab === "cal") renderCal();
         else if (prefs.tab === "list") renderList();
+        else if (prefs.tab === "val") renderVal();
         else renderSummary();
       }
       function fillProjFilter(sel, label, value) {
@@ -3471,7 +4004,7 @@
         el.hidden = !prefs.sidebar || !isAdmin();
         if (el.hidden) return;
         const list = live("tasks")
-          .filter((t) => !t.completedAt && (!prefs.project || t.projectId === prefs.project))
+          .filter((t) => !t.completedAt && !t.gtaskId && (!prefs.project || t.projectId === prefs.project))
           .map((t) => [t, blocksOf(t.id).length])
           .filter(([t, n]) => n < (t.duration || 1))
           .sort((a, b) => urgency(a[0], b[0]));
@@ -3496,6 +4029,7 @@
           td = today();
         let rows = live("tasks")
           .filter((t) => !t.ruleId || t.deadline <= addDays(td, 31))
+          .filter((t) => !(t.gtaskId && get("gtasks", t.gtaskId) && !get("gtasks", t.gtaskId).deleted))
           .map((t) => ({ t, bs: blocksOf(t.id) }));
         rows = rows.filter(({ t, bs }) => {
           if (q && !(t.title + " " + (t.notes || "")).toLowerCase().includes(q)) return false;
@@ -3544,6 +4078,7 @@
               })
               .join("")}</tbody></table>`
           : '<p class="muted">None yet — use “+ Recurring task” for things like weekly wastewater runs or QC.</p>';
+        renderGtList();
       }
 
       /* ---------- summary ---------- */
@@ -3743,6 +4278,7 @@
   ${S.per.map((p) => `<tr><td><span class="sw" style="background:${staffColor(p.id)}"></span> ${esc(p.name)}</td><td><div style="display:flex;align-items:center;gap:8px"><div class="bar" style="width:${(p.done / max) * 100}%"></div>${p.done}</div></td><td>${p.half}</td><td>${pc(p.ontime)}</td><td>${p.open}</td><td class="${p.missed ? "overdue" : ""}">${p.missed}</td></tr>`).join("") || '<tr><td colspan="6" class="muted">No staff yet.</td></tr>'}
   </tbody></table>
   <p class="hint">Joint tasks count for every person on them. Every column counts only work <b>scheduled</b> in the selected period, by calendar date (not the day the box was ticked). A task counts as completed in the period its last half-day falls in. “Open tasks in period” = unfinished tasks with a half-day in the period; “Missed half-days” = past half-days in the period not ticked complete. The “now” cards and the list below show the current state regardless of period.</p>
+  ${vpSummaryHTML()}
   <h3>Incomplete tasks <span class="muted" style="font-weight:400">· as of today</span></h3>
   ${openRows.length ? `<table><thead><tr><th>Status</th><th>Task</th><th>Project</th><th>Priority</th><th>Deadline</th><th>Scheduled</th><th>People</th></tr></thead><tbody>${openRows.map(({ t, bs, st }) => `<tr><td><span class="badge ${st[1]}">${st[0]}</span></td><td><button class="link" data-act="edittask" data-id="${t.id}">${esc(t.title)}</button></td><td>${esc(proj(t.projectId)?.name || "—")}</td><td>${t.priority}</td><td>${dueHTML(t.deadline)}</td><td>${bs.length}/${t.duration}</td><td>${avatars(S.staffOf(t)) || "—"}</td></tr>`).join("")}</tbody></table>` : '<p class="muted">Everything is done. 🎉</p>'}
   <h3>Change log</h3>
@@ -3909,6 +4445,1563 @@
             .reverse()
             .map((l) => [fmtTs(l.ts), l.user, l.msg]),
         ]);
+      }
+
+      /* ---------- validation projects (Gantt) ----------
+         vprojects  {id, name, supervisor, leadId, benchLeadId, startDate, projectId, status, phases:[{id,name}], notes}
+         gtasks     {id, vpId, phaseId, order, title, roleHint, staffIds, roles, spans:[{from,to}], progress, daysHint}
+         templates  {id:'default', phases:[{name, tasks:[{title, roleHint, days}]}]}
+         - The Gantt is planned in whole days; a task can have several date blocks (spans).
+         - staffIds = team members (they get calendar half-days); roles = outside assignees
+           (BINFX / QA / Director) who never appear on the calendar or in the Summary.
+         - Gantt and calendar stay in step: every working day in a span becomes an AM and a PM
+           half-day (one joint block for the task's team) under a linked planner task (gtaskId).
+           Gantt edits rebuild those half-days (syncBlocksFromSpans); calendar edits to them are
+           folded back into the spans and assignees (gtHook → syncSpansFromBlocks).
+         - Admins edit every project; a project's lead edits that project; assignees update progress. */
+      const OUTSIDE = ["BINFX", "QA", "Director"];
+      const BUILTIN_TEMPLATE = {
+        phases: [
+          {
+            name: "R&D",
+            tasks: [
+              ["NCE, Grant, Deliverables", "M4"],
+              ["Samples (List, Location)", "M3"],
+              ["Samples (Acquire and Sort)", "M1/2"],
+              ["Purchase Consumables, Reagents", "M2/3/4"],
+              ["Pipelines, Storage, Analysis", "M3/4/BINFX"],
+              ["Tracker, Folder path, etc.", "M3"],
+              ["Workbook Creation/Modification", "M3"],
+              ["Proof of Concept Run(s)", "M2"],
+            ],
+          },
+          {
+            name: "Validation Plan",
+            tasks: [
+              ["Purpose + Scope", "M3/4"],
+              ["List reagents and Instruments", "M3/4"],
+              ["Sample list", "M3"],
+              ["Procedure", "M3/4"],
+              ["Pollution, WM, RA", "M3/4 (M2 can update with SDSs)"],
+              ["Interpretations, Calcs", "M3/4"],
+              ["Reference (Ranges), Appendices", "M3/4"],
+            ],
+          },
+          {
+            name: "Validation Runs",
+            tasks: [
+              ["Purchase reagents/consumables", "M2/3/4"],
+              ["Validation Run 1", "M3"],
+              ["Validation Run 2", "M3"],
+              ["Validation Run 3", "M2"],
+              ["Validation Run 4", "M2"],
+              ["Validation Run 5", "M2"],
+              ["Validation Run 6", "M2"],
+              ["Validation Run 7", "M2"],
+            ],
+          },
+          {
+            name: "Report Write Up",
+            tasks: [
+              ["Convert to Validation Plan", "M3"],
+              ["Input Lot Numbers", "M2/3"],
+              ["Input Run Data", "M2/3"],
+              ["Input Values/Data", "M2"],
+              ["Replace 1.0 to 2.0 ML", ""],
+            ],
+          },
+          {
+            name: "Validation Checklist",
+            tasks: [
+              ["List supporting documentation", "M3"],
+              ["Double Check Plain Language/Ext. Facing", "M4"],
+              ["Compass Docs Uploaded", "M3"],
+              ["Compass Training Demonstration of Comp.", "M3"],
+              ["Link All Documents", "M3"],
+            ],
+          },
+          {
+            name: "Review and Submission",
+            tasks: [
+              ["Bench Level Review", "Optional M2"],
+              ["Lead Level Review", "M3"],
+              ["Supe Level Review", "M4"],
+              ["Director Level Review", "Dir"],
+              ["QA Level Review", "QA"],
+              ["CLIA Director Review", "QA"],
+            ],
+          },
+        ].map((p) => ({
+          name: p.name,
+          tasks: p.tasks.map(([title, roleHint]) => ({ title, roleHint, days: null })),
+        })),
+      };
+      const GCW = 22; // width of one day column on the Gantt, in pixels
+      const RUN_RX = /^Validation Run \d+$/;
+
+      /* --- lookups & permissions --- */
+      const vpList = () =>
+        live("vprojects").sort(
+          (a, b) =>
+            (a.status === "done") - (b.status === "done") ||
+            (a.startDate || "").localeCompare(b.startDate || "") ||
+            a.name.localeCompare(b.name),
+        );
+      const vpActive = (vp) => !!vp && !vp.deleted && vp.status !== "done";
+      const gtOf = (vpId) =>
+        live("gtasks")
+          .filter((g) => g.vpId === vpId)
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      const canEditVP = (vp) => !!vp && !!meId && (isAdmin() || vp.leadId === meId);
+      const canProgressGT = (g) => canEditVP(get("vprojects", g.vpId)) || teamOf(g).includes(meId);
+      const vpColor = (vp) => proj(vp?.projectId)?.color || "#2f6fde";
+      const phaseName = (vp, id) => vp?.phases?.find((p) => p.id === id)?.name || "";
+      const getTemplate = () => {
+        const t = get("templates", "default");
+        return t && !t.deleted && t.phases?.length ? t : BUILTIN_TEMPLATE;
+      };
+      /* older records (first Gantt version) stored one half-day range and free-text outside names */
+      const spansOf = (g) => g.spans || (g.start && g.end ? [{ from: g.start.date, to: g.end.date }] : []);
+      const rolesOf = (g) =>
+        g.roles ||
+        (g.external
+          ? OUTSIDE.filter((r) =>
+              new RegExp(r === "Director" ? "dir" : r === "BINFX" ? "binfx|bioinf" : "\\bqa\\b", "i").test(
+                g.external,
+              ),
+            )
+          : []);
+      const teamOf = (g) => (g.staffIds || []).filter((id) => get("staff", id) && !get("staff", id).deleted);
+      const outsideOnly = (g) => !teamOf(g).length && rolesOf(g).length > 0;
+      const firstDay = (g) =>
+        spansOf(g)
+          .map((s) => s.from)
+          .sort()[0] || "";
+      const lastDay = (g) =>
+        spansOf(g)
+          .map((s) => s.to)
+          .sort()
+          .pop() || "";
+      function setSpans(g, spans) {
+        g.spans = normSpans(spans);
+        delete g.start;
+        delete g.end;
+      }
+
+      /* --- day arithmetic (weekends and full-day holidays are not working days) --- */
+      let HOL = null;
+      function isHolidaySlot(d, s) {
+        if (!HOL) {
+          HOL = new Set();
+          for (const x of live("daily"))
+            if (x.holiday) {
+              if (!x.part || x.part === "ALL") HOL.add(x.date + "AM").add(x.date + "PM");
+              else HOL.add(x.date + x.part);
+            }
+        }
+        return HOL.has(d + s);
+      }
+      const workSlot = (d, s) => isWeekday(d) && !isHolidaySlot(d, s);
+      const workDay = (d) => workSlot(d, "AM") || workSlot(d, "PM");
+      function daysIn(sp) {
+        const out = [];
+        for (let d = sp.from, n = 0; d <= sp.to && n < 800; d = addDays(d, 1), n++) out.push(d);
+        return out;
+      }
+      const workDaysOf = (g) => spansOf(g).reduce((a, sp) => a + daysIn(sp).filter(workDay).length, 0);
+      const nextWorkDay = (d) => {
+        let x = addDays(d, 1);
+        for (let n = 0; !workDay(x) && n < 60; n++) x = addDays(x, 1);
+        return x;
+      };
+      const toWorkDay = (d) => (workDay(d) ? d : nextWorkDay(d));
+      /* sort, then merge spans that overlap or have no working day between them */
+      function normSpans(spans) {
+        const L = spans
+          .filter((s) => s && s.from && s.to)
+          .map((s) => (s.to < s.from ? { from: s.to, to: s.from } : { ...s }))
+          .sort((a, b) => a.from.localeCompare(b.from));
+        const out = [];
+        for (const s of L) {
+          const p = out[out.length - 1];
+          if (p && (s.from <= p.to || nextWorkDay(p.to) >= s.from)) {
+            if (s.to > p.to) p.to = s.to;
+          } else out.push(s);
+        }
+        return out;
+      }
+      const spansFromDays = (days) => normSpans([...new Set(days)].map((d) => ({ from: d, to: d })));
+      const fmtSpan = (s) => (s.from === s.to ? md(s.from) : `${md(s.from)} – ${md(s.to)}`);
+      const fmtSpans = (g) => spansOf(g).map(fmtSpan).join(", ") || "—";
+
+      /* --- status & progress --- */
+      function gtStatus(g) {
+        const td = today();
+        if ((g.progress || 0) >= 100) return ["Done", "ok"];
+        if (!spansOf(g).length) return ["Not scheduled", "warn"];
+        if (lastDay(g) < td) return ["Overdue", "bad"];
+        if (firstDay(g) <= td) return ["In progress", "ok"];
+        return ["Upcoming", "muted"];
+      }
+      function elapsedFrac(g) {
+        const tot = workDaysOf(g);
+        if (!tot) return 0;
+        const td = today();
+        const past = spansOf(g).reduce(
+          (a, sp) => a + daysIn(sp).filter((d) => d <= td && workDay(d)).length,
+          0,
+        );
+        return Math.min(1, past / tot);
+      }
+      /* forSummary: leave out tasks done only by outside reviewers (BINFX/QA/Director) */
+      function vpStats(vp, forSummary) {
+        const all = gtOf(vp.id),
+          ts = forSummary ? all.filter((g) => !outsideOnly(g)) : all;
+        let w = 0,
+          wp = 0,
+          we = 0,
+          overdue = 0,
+          finish = "",
+          dated = 0;
+        for (const g of ts) {
+          const n = Math.max(1, workDaysOf(g));
+          w += n;
+          wp += n * (g.progress || 0);
+          we += n * 100 * elapsedFrac(g);
+          if (spansOf(g).length) {
+            dated++;
+            if (lastDay(g) > finish) finish = lastDay(g);
+            if (lastDay(g) < today() && (g.progress || 0) < 100) overdue++;
+          }
+        }
+        const pct = w ? Math.round(wp / w) : 0,
+          exp = w ? Math.round(we / w) : 0;
+        const cur = (vp.phases || []).find((p) =>
+          ts.some((g) => g.phaseId === p.id && (g.progress || 0) < 100),
+        );
+        let status;
+        if (vp.status === "done" || (ts.length && pct >= 100)) status = ["Complete", "ok"];
+        else if (!dated) status = ["Not scheduled", "warn"];
+        else if (overdue || pct < exp - 10) status = ["Behind", "bad"];
+        else if (exp === 0 && pct === 0) status = ["Not started", "muted"];
+        else status = ["On track", "ok"];
+        return { tasks: all, pct, exp, overdue, finish, phase: cur?.name || "—", status };
+      }
+
+      /* --- Gantt ⇄ calendar --- */
+      let ganttEditing = false;
+      const linkedTasks = (gid) => live("tasks").filter((t) => t.gtaskId === gid);
+      const linkedBlocks = (gid) => linkedTasks(gid).flatMap((t) => blocksOf(t.id));
+      function linkedTask(g, create) {
+        let t = linkedTasks(g.id)[0];
+        if (!t && create) {
+          const vp = get("vprojects", g.vpId);
+          t = put("tasks", {
+            id: uid(),
+            title: `${g.title} · ${vp.name}`,
+            projectId: vp.projectId || "",
+            priority: "Medium",
+            duration: 0,
+            deadline: lastDay(g),
+            notes: `Validation project: ${vp.name} → ${phaseName(vp, g.phaseId)}`,
+            createdAt: Date.now(),
+            completedAt: null,
+            gtaskId: g.id,
+          });
+        }
+        return t;
+      }
+      /* keep the linked planner task's title, deadline and length in step with its half-days */
+      function tidyLinked(g) {
+        const vp = get("vprojects", g.vpId);
+        for (const t of linkedTasks(g.id)) {
+          const n = blocksOf(t.id).length;
+          if (!n) {
+            del("tasks", t.id);
+            continue;
+          }
+          const title = `${g.title} · ${vp.name}`,
+            dl = lastDay(g) || t.deadline;
+          if (t.duration !== n || t.title !== title || t.deadline !== dl) {
+            Object.assign(t, { duration: n, title, deadline: dl });
+            put("tasks", t);
+          }
+          syncTaskDone(t.id);
+        }
+      }
+      /* Gantt → calendar: one joint half-day block per working AM/PM in the spans, for the team */
+      function syncBlocksFromSpans(g) {
+        const team = teamOf(g),
+          want = new Map();
+        if (team.length && !g.deleted)
+          for (const sp of spansOf(g))
+            for (const d of daysIn(sp))
+              for (const s of ["AM", "PM"]) if (workSlot(d, s)) want.set(d + s, { date: d, slot: s });
+        const have = linkedBlocks(g.id);
+        if (!want.size && !have.length) return;
+        const t = linkedTask(g, true),
+          seen = new Set(),
+          keptDone = [];
+        for (const b of have) {
+          const k = b.date + b.slot;
+          if (want.has(k) && !seen.has(k)) seen.add(k);
+          else if (b.done) keptDone.push(b.date);
+          else del("blocks", b.id);
+        }
+        for (const [k, p] of want)
+          if (!seen.has(k))
+            put("blocks", {
+              id: uid(),
+              taskId: t.id,
+              date: p.date,
+              slot: p.slot,
+              staffIds: [...team],
+              done: false,
+            });
+        if (keptDone.length) setSpans(g, [...spansOf(g), ...keptDone.map((d) => ({ from: d, to: d }))]); // finished half-days stay on the chart
+        tidyLinked(g);
+      }
+      /* assignment changed on the Gantt: unfinished half-days follow the new team */
+      function applyAssignees(g, staffIds, roles) {
+        g.staffIds = staffIds;
+        g.roles = roles;
+        delete g.external;
+        put("gtasks", g);
+        const team = teamOf(g);
+        for (const b of linkedBlocks(g.id))
+          if (!b.done && b.staffIds.join() !== team.join()) {
+            if (team.length) {
+              b.staffIds = [...team];
+              put("blocks", b);
+            } else del("blocks", b.id);
+          }
+        syncBlocksFromSpans(g);
+      }
+      /* calendar → Gantt: spans become the days that hold this task's half-days; team = their people */
+      function syncSpansFromBlocks(gid) {
+        const g = get("gtasks", gid);
+        if (!g || g.deleted) return;
+        const bs = linkedBlocks(gid);
+        const spans = spansFromDays(bs.map((b) => b.date));
+        const team = [...new Set(bs.flatMap((b) => b.staffIds))].filter(
+          (id) => get("staff", id) && !get("staff", id).deleted,
+        );
+        const changed =
+          JSON.stringify(spans) !== JSON.stringify(spansOf(g)) ||
+          (team.length && team.sort().join() !== teamOf(g).sort().join());
+        if (changed) {
+          setSpans(g, spans);
+          if (team.length) g.staffIds = team;
+          put("gtasks", g);
+        }
+        tidyLinked(g);
+      }
+      /* runs just before every change is logged: fold calendar edits of linked half-days into the Gantt */
+      function gtHook() {
+        if (ganttEditing) return;
+        const gids = new Set();
+        for (const x of txn.values())
+          if (x.c === "blocks") {
+            const b = get("blocks", x.id),
+              t = b && get("tasks", b.taskId);
+            if (t?.gtaskId) gids.add(t.gtaskId);
+          }
+        for (const gid of gids) syncSpansFromBlocks(gid);
+      }
+      function gtCommit(msg) {
+        ganttEditing = true;
+        try {
+          commit(msg);
+        } finally {
+          ganttEditing = false;
+        }
+      }
+      /* progress follows ticked half-days whenever the task has any on the calendar */
+      /* Progress follows the calendar only when someone ticks or unticks one of the task's half-days
+         (the count of finished half-days changes). Adding, moving or removing half-days, or saving the
+         task, never overwrites a progress value that was set by hand. */
+      function syncGtProgress(gid) {
+        const g = get("gtasks", gid);
+        if (!g || g.deleted) return;
+        const bs = linkedBlocks(gid);
+        if (!bs.length) return;
+        const done = bs.filter((b) => b.done).length;
+        if (done === (g.tickDone ?? 0)) return;
+        g.tickDone = done;
+        g.progress = Math.round((100 * done) / bs.length);
+        put("gtasks", g);
+      }
+      /* Set progress by hand. 100% marks the task complete and ticks its remaining half-days on the
+         calendar; lowering it again (or p = -1, "reopen") unticks only the half-days that completing ticked. */
+      function setGtProgress(g, p) {
+        if (p < 100 && (g.autoTicked || []).length) {
+          for (const id of g.autoTicked) {
+            const b = get("blocks", id);
+            if (b && !b.deleted && b.done) {
+              b.done = false;
+              b.doneAt = null;
+              b.doneBy = null;
+              put("blocks", b);
+            }
+          }
+          g.autoTicked = [];
+        }
+        const bs = linkedBlocks(g.id);
+        if (p >= 100) {
+          const ids = [];
+          for (const b of bs)
+            if (!b.done) {
+              b.done = true;
+              b.doneAt = Date.now();
+              b.doneBy = me;
+              put("blocks", b);
+              ids.push(b.id);
+            }
+          if (ids.length) g.autoTicked = [...(g.autoTicked || []), ...ids];
+        }
+        if (p < 0) p = bs.length ? Math.round((100 * bs.filter((b) => b.done).length) / bs.length) : 0;
+        if (p >= 100 && !g.completedAt) g.completedAt = Date.now();
+        if (p < 100) g.completedAt = null;
+        g.progress = Math.min(100, p);
+        g.tickDone = bs.filter((b) => b.done).length;
+        put("gtasks", g);
+        for (const t of linkedTasks(g.id)) syncTaskDone(t.id);
+      }
+      const gtDone = (g) => (g.progress || 0) >= 100;
+      /* dragging a Task-list row onto a half-day books that half-day (and adds the day to the Gantt) */
+      function scheduleGtask(gid, staff, date, slot) {
+        const g = get("gtasks", gid),
+          vp = g && get("vprojects", g.vpId);
+        if (!g || !canEditVP(vp)) return;
+        const ab = absenceAt(staff, date, slot);
+        if (ab && !confirm(`${staffName(staff)} is out of office then. Schedule anyway?`)) return;
+        const t = linkedTask(g, true);
+        put("blocks", { id: uid(), taskId: t.id, date, slot, staffIds: [staff], done: false });
+        commit(`Scheduled "${g.title}" (${vp.name}) for ${staffName(staff)} on ${date} ${slot}`);
+      }
+      function removeGtask(g) {
+        for (const b of linkedBlocks(g.id)) if (!b.done) del("blocks", b.id);
+        for (const t of linkedTasks(g.id))
+          if (blocksOf(t.id).length) {
+            delete t.gtaskId;
+            put("tasks", t);
+          } else del("tasks", t.id);
+        del("gtasks", g.id);
+      }
+
+      /* --- assignment dropdown (team members + outside reviewers, multi-select) --- */
+      function assignLabel(g, hint) {
+        const team = teamOf(g),
+          roles = rolesOf(g);
+        return (
+          avatars(team) + roles.map((r) => `<span class="ext">${r}</span>`).join("") ||
+          `<span class="muted">${esc(hint ? g.roleHint || "Assign…" : "Nobody yet")}</span>`
+        );
+      }
+      function assignDD(g, inline) {
+        const team = teamOf(g),
+          roles = rolesOf(g);
+        return `<details class="msel" ${inline ? `data-gid="${g.id}"` : ""}><summary title="Assign">${assignLabel(g, inline)}<span class="caret">▾</span></summary><div class="mpanel">
+          <div class="mh">Team (shows on the calendar)</div>${staffList()
+            .map(
+              (s) =>
+                `<label class="chk"><input type="checkbox" name="staffIds" value="${s.id}" ${team.includes(s.id) ? "checked" : ""}><span class="sw" style="background:${s.color}"></span>${esc(s.name)}</label>`,
+            )
+            .join("")}
+          <div class="mh">Outside (not on calendar or Summary)</div>${OUTSIDE.map((r) => `<label class="chk"><input type="checkbox" name="roles" value="${r}" ${roles.includes(r) ? "checked" : ""}>${r}</label>`).join("")}
+          ${g.roleHint ? `<p class="hint" style="margin:6px 0 0">Template suggests: ${esc(g.roleHint)}</p>` : ""}</div></details>`;
+      }
+      const ddPicked = (el) => [
+        $$("[name=staffIds]:checked", el).map((i) => i.value),
+        $$("[name=roles]:checked", el).map((i) => i.value),
+      ];
+      document.addEventListener(
+        "toggle",
+        (e) => {
+          const dd = e.target;
+          if (!dd.matches || !dd.matches("details.msel[data-gid]")) return;
+          if (dd.open) {
+            modalOpen = true; // hold background refreshes while choosing
+            return;
+          }
+          modalOpen = false;
+          const g = get("gtasks", dd.dataset.gid);
+          if (!g || !canEditVP(get("vprojects", g.vpId))) return;
+          const [st, ro] = ddPicked(dd);
+          if (st.sort().join() === teamOf(g).sort().join() && ro.sort().join() === rolesOf(g).sort().join()) {
+            if (deferred) render();
+            return;
+          }
+          applyAssignees(g, st, ro);
+          gtCommit(`Assigned "${g.title}" to ${[...st.map(staffName), ...ro].join(", ") || "nobody"}`);
+        },
+        true,
+      );
+
+      /* --- Validations tab --- */
+      function renderVal() {
+        const list = vpList();
+        if (prefs.gv !== "mine" && !list.some((v) => v.id === prefs.gv)) prefs.gv = "mine";
+        const nMine = live("gtasks").filter(
+          (g) => teamOf(g).includes(meId) && (g.progress || 0) < 100 && vpActive(get("vprojects", g.vpId)),
+        ).length;
+        const item = (v) => {
+          const S = vpStats(v);
+          return `<button class="vitem ${prefs.gv === v.id ? "on" : ""}" data-g="view" data-id="${v.id}"><span class="sw" style="background:${vpColor(v)}"></span><span class="vn">${esc(v.name)}</span><span class="vp">${S.pct}%</span><span class="vbar"><i style="width:${S.pct}%;background:${vpColor(v)}"></i></span></button>`;
+        };
+        const act = list.filter(vpActive),
+          done = list.filter((v) => !vpActive(v));
+        $("#vlist").innerHTML = `
+          <button class="vitem mine ${prefs.gv === "mine" ? "on" : ""}" data-g="view" data-id="mine">★ My tasks <span class="vp">${nMine}</span></button>
+          ${isAdmin() ? '<button class="btn primary wide" data-g="newvp">+ New validation project</button>' : ""}
+          <h4>Active projects</h4>${act.map(item).join("") || '<p class="hint">None yet.</p>'}
+          ${done.length ? `<h4>Completed</h4>${done.map(item).join("")}` : ""}`;
+        if (prefs.gv === "mine") renderMyTasks();
+        else renderProject(get("vprojects", prefs.gv));
+      }
+
+      function renderMyTasks() {
+        const showDone = !!prefs.gvDone;
+        const rows = live("gtasks")
+          .filter((g) => teamOf(g).includes(meId) && !get("vprojects", g.vpId)?.deleted)
+          .filter((g) => showDone || ((g.progress || 0) < 100 && vpActive(get("vprojects", g.vpId))))
+          .sort(
+            (a, b) =>
+              ((a.progress || 0) >= 100) - ((b.progress || 0) >= 100) ||
+              (lastDay(a) || "9999").localeCompare(lastDay(b) || "9999"),
+          );
+        $("#vmain").innerHTML = `
+          <div class="vhead"><div class="vtitle"><h2>My validation tasks</h2></div>
+          <p class="hint" style="margin:4px 0 0">Every project task assigned to you, due soonest first. They're also on your calendar as half-day tasks — tick those off, or use the slider.</p>
+          <label class="chk" style="margin-top:8px"><input type="checkbox" data-g="mydone" ${showDone ? "checked" : ""}> Show completed</label></div>
+          ${
+            rows.length
+              ? `<table class="gtable"><thead><tr><th>Status</th><th>Task</th><th>Project · phase</th><th>Dates</th><th>Days</th><th style="width:190px">Progress</th><th></th></tr></thead><tbody>${rows
+                  .map((g) => {
+                    const vp = get("vprojects", g.vpId),
+                      st = gtStatus(g);
+                    return `<tr><td><span class="badge ${st[1]}">${st[0]}</span></td><td><b>${esc(g.title)}</b>${notesOf(g.id).length ? ` <span class="muted">💬${notesOf(g.id).length}</span>` : ""}</td>
+                    <td><span class="tag"><span class="sw" style="background:${vpColor(vp)}"></span>${esc(vp.name)}</span> <span class="muted">${esc(phaseName(vp, g.phaseId))}</span></td>
+                    <td>${fmtSpans(g)}</td><td>${workDaysOf(g) || "—"}</td>
+                    <td>${progressCtl(g)}</td><td><button class="mini" data-g="opengt" data-id="${g.id}">Open</button></td></tr>`;
+                  })
+                  .join("")}</tbody></table>`
+              : `<div class="empty">No validation tasks ${showDone ? "" : "open "}for you.</div>`
+          }`;
+      }
+      const progressCtl = (g) =>
+        canProgressGT(g)
+          ? `<span class="pctl"><input type="range" min="0" max="100" step="5" value="${g.progress || 0}" data-g="prog" data-id="${g.id}"><b>${g.progress || 0}%</b></span>`
+          : `<span class="prog"><i style="width:${g.progress || 0}%"></i></span>${g.progress || 0}%`;
+
+      let GC = null; // day columns of the Gantt currently on screen (used by pointer handlers and export)
+      function ganttCols(vp, ts) {
+        const keys = ts.flatMap((g) => spansOf(g).flatMap((s) => [s.from, s.to]));
+        const lo = [vp.startDate || today(), ...keys].sort()[0];
+        const hi = [addDays(vp.startDate || today(), 7 * 10), ...keys].sort().pop();
+        let d = mondayOf(lo);
+        const stop = addDays(mondayOf(hi), 13),
+          cols = [];
+        while (d <= stop && cols.length < 1500) {
+          if (prefs.weekends || isWeekday(d)) cols.push(d);
+          d = addDays(d, 1);
+        }
+        return cols;
+      }
+      function colOf(d, kind) {
+        const c = GC.cols;
+        let lo = 0,
+          hi = c.length - 1;
+        while (lo <= hi) {
+          const m = (lo + hi) >> 1;
+          if (c[m] < d) lo = m + 1;
+          else hi = m - 1;
+        }
+        if (lo < c.length && c[lo] === d) return lo;
+        return kind === "start" ? Math.min(lo, c.length - 1) : Math.max(lo - 1, 0);
+      }
+      function renderProject(vp) {
+        const ed = canEditVP(vp),
+          S = vpStats(vp),
+          ts = S.tasks;
+        const cols = ganttCols(vp, ts);
+        GC = { vp: vp.id, cols };
+        const td = today(),
+          wkW = (prefs.weekends ? 7 : 5) * GCW,
+          tlw = cols.length * GCW;
+        let wk = "",
+          days = "",
+          deco = "";
+        cols.forEach((d, i) => {
+          if (i === 0 || wdIdx(d) === 0)
+            wk += `<div class="gwk" style="left:${i * GCW}px">${md(d)}${d.slice(5, 7) === "01" && d.slice(8) <= "07" ? " " + d.slice(0, 4) : ""}</div>`;
+          days += `<div class="gday ${d === td ? "today" : ""} ${workDay(d) ? "" : "off"}" style="left:${i * GCW}px">${DAYN[wdIdx(d)][0]}<br>${+d.slice(8)}</div>`;
+          if (!workDay(d)) deco += `<i class="goff" style="left:${i * GCW}px"></i>`;
+        });
+        const ti = cols.indexOf(td);
+        if (ti >= 0) deco += `<i class="gtoday" style="left:${ti * GCW}px"></i>`;
+        /* one bar per date block; progress fills the blocks left to right */
+        const bars = (g, cls = "") => {
+          const sp = spansOf(g);
+          if (!sp.length) return "";
+          const tot = sp.reduce(
+            (a, s) => a + Math.max(0, colOf(s.to, "end") - colOf(s.from, "start") + 1),
+            0,
+          );
+          let fill = (tot * (g.progress || 0)) / 100,
+            h = "";
+          const late = gtStatus(g)[1] === "bad";
+          sp.forEach((s, si) => {
+            const a = colOf(s.from, "start"),
+              b = colOf(s.to, "end");
+            if (b < a) return;
+            const n = b - a + 1,
+              f = Math.max(0, Math.min(n, fill));
+            fill -= f;
+            h += `<div class="gbar ${cls} ${late ? "late" : ""}" data-si="${si}" style="left:${a * GCW}px;width:${n * GCW}px;--c:${vpColor(vp)}" title="${esc(fmtSpan(s))}"><i style="width:${(f / n) * 100}%"></i>${ed && !cls ? '<b class="gh-l"></b><b class="gh-r"></b>' : ""}</div>`;
+          });
+          return h;
+        };
+        let rows = "";
+        (vp.phases || []).forEach((ph, pi) => {
+          const pts = ts.filter((g) => g.phaseId === ph.id),
+            dated = pts.filter((g) => spansOf(g).length);
+          let sum = "";
+          if (dated.length) {
+            const w = pts.reduce((a, g) => a + Math.max(1, workDaysOf(g)), 0);
+            const pr = Math.round(
+              pts.reduce((a, g) => a + Math.max(1, workDaysOf(g)) * (g.progress || 0), 0) / (w || 1),
+            );
+            sum = bars(
+              {
+                spans: [{ from: dated.map(firstDay).sort()[0], to: dated.map(lastDay).sort().pop() }],
+                progress: pr,
+              },
+              "phase",
+            );
+          }
+          rows += `<div class="grow gphase"><div class="gl"><span class="gpn">${esc(ph.name)}</span><span class="muted">${pts.filter((g) => (g.progress || 0) >= 100).length}/${pts.length}</span>
+            ${ed ? `<span class="gtools"><button class="mini" data-g="addgt" data-ph="${ph.id}" title="Add a task to this phase">+ task</button><button class="mini" data-g="phren" data-ph="${ph.id}" title="Rename phase">✎</button><button class="mini" data-g="phmv" data-ph="${ph.id}" data-d="-1" ${pi ? "" : "disabled"}>↑</button><button class="mini" data-g="phmv" data-ph="${ph.id}" data-d="1" ${pi < vp.phases.length - 1 ? "" : "disabled"}>↓</button><button class="mini danger" data-g="phdel" data-ph="${ph.id}" title="Delete phase">✕</button></span>` : ""}</div>
+            <div class="gr">${deco}${sum}</div></div>`;
+          pts.forEach((g, i) => {
+            const sp = spansOf(g);
+            rows += `<div class="grow"><div class="gl">
+              <span class="gc-t ${gtDone(g) ? "gdone" : ""}"><button class="link gtt" data-g="opengt" data-id="${g.id}" title="${esc(g.title + (g.roleHint ? "\nTemplate role: " + g.roleHint : ""))}">${esc(g.title)}</button>${notesOf(g.id).length ? `<span class="muted">💬${notesOf(g.id).length}</span>` : ""}${ed ? `<span class="gtools"><button class="mini" data-g="gtmv" data-id="${g.id}" data-d="-1" ${i ? "" : "disabled"}>↑</button><button class="mini" data-g="gtmv" data-id="${g.id}" data-d="1" ${i < pts.length - 1 ? "" : "disabled"}>↓</button></span>` : ""}</span>
+              <span class="gc-a">${ed ? assignDD(g, true) : assignLabel(g, true)}</span><span class="gc-p">${canProgressGT(g) ? `<label class="gdn" title="${gtDone(g) ? "Completed — untick to reopen" : "Mark as complete"}"><input type="checkbox" data-g="gdone" data-id="${g.id}" ${gtDone(g) ? "checked" : ""}>${g.progress || 0}%</label>` : `${gtDone(g) ? "✓ " : ""}${g.progress || 0}%`}</span>
+              <span class="gc-d">${sp.length ? md(sp[0].from) : "—"}</span><span class="gc-d">${sp.length ? md(sp[sp.length - 1].to) : "—"}${sp.length > 1 ? ` <span class="muted" title="${esc(fmtSpans(g))}">(${sp.length} blocks)</span>` : ""}</span><span class="gc-n">${workDaysOf(g) || "—"}</span></div>
+              <div class="gr ${ed ? "edit" : ""}" data-gt="${g.id}">${deco}${bars(g)}${ed && !sp.length ? '<span class="ghint">drag across to add a date block</span>' : ""}</div></div>`;
+          });
+        });
+        const lead = vp.leadId ? staffName(vp.leadId) : "—",
+          bench = vp.benchLeadId ? staffName(vp.benchLeadId) : "—";
+        const old = $("#gscroll"),
+          keep = old && old.dataset.vp === vp.id ? [old.scrollLeft, old.scrollTop] : null;
+        $("#vmain").innerHTML = `
+          <div class="vhead">
+            <div class="vtitle"><span class="sw" style="background:${vpColor(vp)}"></span><h2>${esc(vp.name)}</h2><span class="badge ${S.status[1]}">${S.status[0]}</span>${ed && !isAdmin() ? '<span class="rolechip">You lead this project</span>' : ""}</div>
+            <div class="vmeta">Supervisor: <b>${esc(vp.supervisor || "—")}</b> · Project lead: <b>${esc(lead)}</b> · Bench lead: <b>${esc(bench)}</b> · Start: <b>${vp.startDate ? md(vp.startDate) + ", " + vp.startDate.slice(0, 4) : "—"}</b> · Planned finish: <b>${S.finish ? md(S.finish) + ", " + S.finish.slice(0, 4) : "—"}</b> · Current phase: <b>${esc(S.phase)}</b></div>
+            <div class="vprog"><span class="vbig"><i style="width:${S.pct}%;background:${vpColor(vp)}"></i><em style="left:${S.exp}%" title="Expected by today: ${S.exp}%"></em></span><b>${S.pct}% complete</b> <span class="muted">· expected ${S.exp}% by today${S.overdue ? ` · <span class="overdue">${S.overdue} overdue</span>` : ""}</span></div>
+            ${vp.notes ? `<div class="notes" style="margin-top:8px">${esc(vp.notes)}</div>` : ""}
+            <div class="vtools">
+              ${ed ? '<button class="btn" data-g="editvp">Edit details</button><button class="btn" data-g="addph">+ Phase</button><button class="btn" data-g="autofill">Auto-fill dates…</button>' : ""}
+              <button class="btn" data-g="gtoday">Today</button>
+              <button class="btn" data-g="xlsx">Export to Excel</button>
+              ${isAdmin() ? `<button class="btn" data-g="savetpl">Save as default template</button><button class="btn" data-g="vpdone">${vp.status === "done" ? "Reopen project" : "Mark complete"}</button><button class="btn danger" data-g="delvp">Delete</button>` : ""}
+            </div>
+          </div>
+          <div class="gwrap" id="gscroll" data-vp="${vp.id}">
+            <div class="gantt" style="--tlw:${tlw}px;--dw:${GCW}px;--ww:${wkW}px">
+              <div class="grow ghead"><div class="gl"><span class="gc-t">TASK</span><span class="gc-a">ASSIGNED TO</span><span class="gc-p">DONE</span><span class="gc-d">START</span><span class="gc-d">END</span><span class="gc-n" title="Working days">DAYS</span></div>
+                <div class="gr"><div class="gwks">${wk}</div><div class="gdays">${days}</div></div></div>
+              ${rows || `<div class="empty">No phases yet.${ed ? " Use “+ Phase” to add one." : ""}</div>`}
+            </div>
+          </div>
+          <p class="hint">${ed ? "Drag across empty space in a row to add a date block (a task can have several); drag a block to move it, or its ends to resize. Weekends and holidays are shaded and don't count. Once a task has dates and team members, each working day appears on their calendar as AM and PM half-days — moving those on the calendar updates this chart too." : "You can update progress and add notes on tasks assigned to you. The project lead or an administrator edits the plan."}</p>`;
+        const sc = $("#gscroll");
+        if (keep) [sc.scrollLeft, sc.scrollTop] = keep;
+        else if (ti >= 0) sc.scrollLeft = Math.max(0, ti * GCW - 3 * wkW);
+      }
+
+      /* --- Gantt drag: draw a new date block on empty space, move a block, or resize it --- */
+      let gDrag = null;
+      document.addEventListener("pointerdown", (e) => {
+        const gr = e.target.closest && e.target.closest(".gr[data-gt]");
+        if (!gr || e.button !== 0 || !GC) return;
+        const g = get("gtasks", gr.dataset.gt),
+          vp = g && get("vprojects", g.vpId);
+        if (!g || !canEditVP(vp)) return;
+        const col = Math.max(
+          0,
+          Math.min(GC.cols.length - 1, Math.floor((e.clientX - gr.getBoundingClientRect().left) / GCW)),
+        );
+        const onBar = e.target.closest(".gbar");
+        const si = onBar ? +onBar.dataset.si : -1,
+          sp = si >= 0 ? spansOf(g)[si] : null;
+        const mode = onBar
+          ? e.target.closest(".gh-l")
+            ? "L"
+            : e.target.closest(".gh-r")
+              ? "R"
+              : "move"
+          : "create";
+        const s0 = sp ? colOf(sp.from, "start") : col,
+          e0 = sp ? colOf(sp.to, "end") : col;
+        gDrag = { g, gr, si, mode, col0: col, s0, e0, s: s0, e: e0, moved: false, bar: onBar };
+        gr.setPointerCapture(e.pointerId);
+        dragging = true;
+        e.preventDefault();
+        drawDrag();
+      });
+      document.addEventListener("pointermove", (e) => {
+        if (!gDrag) return;
+        const D = gDrag,
+          n = GC.cols.length;
+        const col = Math.max(
+          0,
+          Math.min(n - 1, Math.floor((e.clientX - D.gr.getBoundingClientRect().left) / GCW)),
+        );
+        const d = col - D.col0;
+        if (d) D.moved = true;
+        if (D.mode === "create") [D.s, D.e] = [Math.min(D.col0, col), Math.max(D.col0, col)];
+        else if (D.mode === "move") {
+          const dd = Math.max(-D.s0, Math.min(n - 1 - D.e0, d));
+          [D.s, D.e] = [D.s0 + dd, D.e0 + dd];
+        } else if (D.mode === "L") D.s = Math.min(D.e0, Math.max(0, D.s0 + d));
+        else D.e = Math.max(D.s0, Math.min(n - 1, D.e0 + d));
+        drawDrag();
+      });
+      function drawDrag() {
+        const D = gDrag;
+        if (!D.bar) {
+          D.bar = document.createElement("div");
+          D.bar.className = "gbar preview";
+          D.bar.style.setProperty("--c", vpColor(get("vprojects", D.g.vpId)));
+          D.gr.appendChild(D.bar);
+        }
+        D.bar.style.left = D.s * GCW + "px";
+        D.bar.style.width = (D.e - D.s + 1) * GCW + "px";
+        D.bar.title = fmtSpan({ from: GC.cols[D.s], to: GC.cols[D.e] });
+      }
+      document.addEventListener("pointerup", () => {
+        if (!gDrag) return;
+        const D = gDrag;
+        gDrag = null;
+        dragging = false;
+        if (!D.moved && D.mode !== "create") {
+          if (deferred) render();
+          gtaskModal(D.g.id);
+          return;
+        }
+        const g = D.g,
+          sp = [...spansOf(g)],
+          nb = { from: GC.cols[D.s], to: GC.cols[D.e] };
+        if (D.mode === "create") sp.push(nb);
+        else sp[D.si] = nb;
+        setSpans(g, sp);
+        put("gtasks", g);
+        syncBlocksFromSpans(g);
+        gtCommit(
+          `${D.mode === "create" ? "Added date block" : "Moved date block"} ${fmtSpan(nb)} for "${g.title}" (${workDaysOf(g)} days)`,
+        );
+      });
+
+      /* --- dialogs --- */
+      function staffOptions(sel, blank) {
+        return (
+          (blank ? `<option value="">${blank}</option>` : "") +
+          staffList()
+            .map((s) => `<option value="${s.id}" ${s.id === sel ? "selected" : ""}>${esc(s.name)}</option>`)
+            .join("")
+        );
+      }
+      function vpModal(id) {
+        const vp = id
+          ? get("vprojects", id)
+          : {
+              name: "",
+              supervisor: "",
+              leadId: meId,
+              benchLeadId: "",
+              startDate: today(),
+              projectId: "",
+              notes: "",
+            };
+        if (id ? !canEditVP(vp) : !isAdmin()) return;
+        const T = getTemplate(),
+          runs = T.phases.flatMap((p) => p.tasks).filter((t) => RUN_RX.test(t.title)).length;
+        modal(
+          id ? "Project details" : "New validation project",
+          `
+          <label>Project name<input name="name" required value="${esc(vp.name)}" placeholder="e.g. MiSeq i100 validation"></label>
+          <div class="row"><label>Supervisor<input name="supervisor" value="${esc(vp.supervisor)}" list="supList" placeholder="Name"></label>
+            <label>Start date<input type="date" name="startDate" value="${vp.startDate || today()}" required></label></div>
+          <datalist id="supList">${staffList()
+            .map((s) => `<option value="${esc(s.name)}">`)
+            .join("")}</datalist>
+          <div class="row"><label>Project lead (can edit this project)<select name="leadId" ${isAdmin() ? "" : "disabled"}>${staffOptions(vp.leadId, "— none —")}</select></label>
+            <label>Bench lead<select name="benchLeadId">${staffOptions(vp.benchLeadId, "— none —")}</select></label></div>
+          <label>Colour / category<select name="projectId">${id ? "" : '<option value="__new">New category named after the project</option>'}<option value="">None</option>${live(
+            "projects",
+          )
+            .map(
+              (p) =>
+                `<option value="${p.id}" ${p.id === vp.projectId ? "selected" : ""}>${esc(p.name)}</option>`,
+            )
+            .join("")}</select></label>
+          <label>Notes (optional)<textarea name="notes" rows="2">${esc(vp.notes)}</textarea></label>
+          ${
+            id
+              ? ""
+              : `<label class="chk"><input type="checkbox" name="usetpl" checked> Start from the ${T === BUILTIN_TEMPLATE ? "standard" : "saved default"} template (${T.phases.length} phases, ${T.phases.reduce((a, p) => a + p.tasks.length, 0)} tasks)</label>
+            ${runs ? `<label style="margin-top:8px">Number of validation runs<input type="number" name="runs" min="0" max="30" value="${runs}" style="width:90px"></label>` : ""}
+            <p class="hint">Tasks start unassigned and undated; the template's role (M1–M4, QA…) is shown as a hint. Use “Auto-fill dates” to lay them out, then drag the date blocks to adjust.</p>`
+          }`,
+          {
+            ok: id ? "Save" : "Create project",
+            onOk: (d) => {
+              const name = val(d, "name").trim();
+              if (!name) return false;
+              const rec = id ? vp : { id: uid(), status: "active", phases: [], createdAt: Date.now() };
+              let pid = val(d, "projectId");
+              if (pid === "__new")
+                pid = put("projects", {
+                  id: uid(),
+                  name,
+                  color: PALETTE[(DB.projects.length + 3) % PALETTE.length],
+                }).id;
+              Object.assign(rec, {
+                name,
+                supervisor: val(d, "supervisor").trim(),
+                startDate: val(d, "startDate") || today(),
+                benchLeadId: val(d, "benchLeadId"),
+                projectId: pid,
+                notes: val(d, "notes"),
+              });
+              if (isAdmin()) rec.leadId = val(d, "leadId");
+              if (!id && d.querySelector("[name=usetpl]").checked) {
+                const nRuns = d.querySelector("[name=runs]") ? Math.max(0, +val(d, "runs") || 0) : null;
+                let order = 0;
+                for (const p of T.phases) {
+                  const ph = { id: uid(), name: p.name };
+                  rec.phases.push(ph);
+                  let tasks = p.tasks;
+                  const runT = tasks.filter((t) => RUN_RX.test(t.title));
+                  if (nRuns !== null && runT.length) {
+                    const at = tasks.indexOf(runT[0]);
+                    const made = [...Array(nRuns)].map((_, i) => ({
+                      ...(runT[Math.min(i, runT.length - 1)] || {}),
+                      title: `Validation Run ${i + 1}`,
+                    }));
+                    tasks = [
+                      ...tasks.slice(0, at),
+                      ...made,
+                      ...tasks.filter((t, i) => i > at && !RUN_RX.test(t.title)),
+                    ];
+                  }
+                  for (const t of tasks)
+                    put("gtasks", {
+                      id: uid(),
+                      vpId: rec.id,
+                      phaseId: ph.id,
+                      order: order++,
+                      title: t.title,
+                      roleHint: t.roleHint || "",
+                      staffIds: [],
+                      roles:
+                        t.roleHint === "Dir"
+                          ? ["Director"]
+                          : t.roleHint === "QA"
+                            ? ["QA"]
+                            : t.roleHint === "BINFX"
+                              ? ["BINFX"]
+                              : [],
+                      spans: [],
+                      progress: 0,
+                      daysHint: t.days || (t.halfDays ? Math.ceil(t.halfDays / 2) : null),
+                    });
+                }
+              }
+              put("vprojects", rec);
+              if (!id) prefs.gv = rec.id;
+              if (id) for (const g of gtOf(rec.id)) tidyLinked(g); // renamed project → linked calendar titles follow
+              gtCommit(`${id ? "Edited" : "Created"} validation project "${name}"`);
+            },
+          },
+        );
+      }
+      function spanRow(s = { from: "", to: "" }) {
+        return `<div class="srow spanrow"><input type="date" name="sf" value="${s.from}"><span>to</span><input type="date" name="st" value="${s.to}"><button type="button" class="mini danger" data-rmspan="1" title="Remove this date block">✕</button></div>`;
+      }
+      /* dialog button: sets the slider to 100% (or reopens) and saves, keeping any other edits in the dialog */
+      const completeBtn = (g) =>
+        gtDone(g)
+          ? {
+              label: "↺ Reopen",
+              fn: (d) => (
+                (d.querySelector("form").dataset.reopen = "1"), d.querySelector("form").requestSubmit(), false
+              ),
+            }
+          : {
+              label: "✓ Mark as complete",
+              cls: "primary",
+              fn: (d) => (
+                (d.querySelector("[name=progress]").value = 100),
+                d.querySelector("form").requestSubmit(),
+                false
+              ),
+            };
+      function gtaskModal(id, vpId, phaseId) {
+        const g = id
+          ? get("gtasks", id)
+          : { title: "", vpId, phaseId, staffIds: [], roles: [], spans: [], progress: 0, roleHint: "" };
+        const vp = get("vprojects", g.vpId);
+        if (!vp) return;
+        const ed = canEditVP(vp),
+          pr = canProgressGT(g);
+        if (!id && !ed) return;
+        const lbs = id
+          ? linkedBlocks(id).sort((a, b) => (a.date + a.slot).localeCompare(b.date + b.slot))
+          : [];
+        const sched = id
+          ? `<h4>On the calendar</h4>${lbs.length ? `<div class="muted" style="font-size:13px">${lbs.length} half-day${lbs.length > 1 ? "s" : ""}: ${lbs.map((b) => `${DAYN[wdIdx(b.date)]} ${md(b.date)} ${b.slot}${b.done ? " ✓" : ""}`).join(" · ")}</div>` : `<div class="muted" style="font-size:13px">${outsideOnly(g) ? "Outside reviewers only — not shown on the calendar." : teamOf(g).length ? "Add date blocks to put it on the calendar." : "Assign team members to put it on the calendar."}</div>`}`
+          : "";
+        const prog = `<label>Progress <span class="muted" id="pv">${g.progress || 0}%</span><input type="range" name="progress" min="0" max="100" step="5" value="${g.progress || 0}" ${pr ? "" : "disabled"} oninput="this.form.querySelector('#pv').textContent=this.value+'%'"></label>
+          ${lbs.length ? '<p class="hint" style="margin-top:-6px">Ticking this task’s half-days on the calendar also updates progress.</p>' : ""}`;
+        if (!ed) {
+          modal(
+            g.title,
+            `<p class="muted" style="margin-top:-6px">${esc(vp.name)} · ${esc(phaseName(vp, g.phaseId))}</p>
+            <p style="margin:0 0 8px"><b>${fmtSpans(g)}</b> · ${workDaysOf(g)} working day(s)<br>Assigned: ${assignLabel(g)}</p>
+            ${prog}${sched}${notesBlock(id)}`,
+            {
+              onMount: wireNotes,
+              onOk: (d) => {
+                addNote(d, id);
+                const p = d.querySelector("form").dataset.reopen ? -1 : +val(d, "progress");
+                if (pr && (p !== (g.progress || 0) || d.querySelector("form").dataset.reopen)) {
+                  setGtProgress(g, p);
+                  gtCommit(
+                    `${p >= 100 ? "Completed" : d.querySelector("form").dataset.reopen ? "Reopened" : "Updated progress of"} "${g.title}" (${vp.name})${p >= 0 && p < 100 ? " to " + p + "%" : ""}`,
+                  );
+                } else commit();
+              },
+              extra: pr ? [completeBtn(g)] : [],
+            },
+          );
+          return;
+        }
+        modal(
+          id ? "Project task" : "New project task",
+          `<p class="muted" style="margin-top:-6px">${esc(vp.name)}</p>
+          <label>Task<input name="title" required value="${esc(g.title)}"></label>
+          <div class="row"><label>Phase<select name="phaseId">${(vp.phases || []).map((p) => `<option value="${p.id}" ${p.id === g.phaseId ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select></label>
+            <label>Template role (hint)<input name="roleHint" value="${esc(g.roleHint)}" placeholder="e.g. M3/4"></label></div>
+          <label>Assigned to</label>${assignDD(g, false)}
+          <h4>Date blocks <span class="muted" style="font-weight:400">· whole days; weekends and holidays are skipped</span></h4>
+          <div id="spans">${(spansOf(g).length ? spansOf(g) : [{ from: "", to: "" }]).map(spanRow).join("")}</div>
+          <button type="button" class="mini" data-addspan="1">+ Add date block</button>
+          <p class="hint" id="wdn">${workDaysOf(g) ? workDaysOf(g) + " working day(s)" : ""}</p>
+          ${prog}${sched}${id ? notesBlock(id) : ""}`,
+          {
+            onMount: (d) => {
+              if (id) wireNotes(d);
+              const box = d.querySelector("#spans");
+              const read = () =>
+                $$(".spanrow", box).map((r) => ({
+                  from: r.querySelector("[name=sf]").value,
+                  to: r.querySelector("[name=st]").value || r.querySelector("[name=sf]").value,
+                }));
+              const upd = () =>
+                (d.querySelector("#wdn").textContent =
+                  workDaysOf({ spans: normSpans(read()) }) + " working day(s)");
+              d.querySelector("form").addEventListener("click", (e) => {
+                if (e.target.closest("[data-addspan]")) box.insertAdjacentHTML("beforeend", spanRow());
+                const rm = e.target.closest("[data-rmspan]");
+                if (rm) {
+                  rm.closest(".spanrow").remove();
+                  upd();
+                }
+              });
+              box.addEventListener("change", (e) => {
+                const r = e.target.closest(".spanrow"),
+                  f = r.querySelector("[name=sf]"),
+                  t = r.querySelector("[name=st]");
+                if (e.target === f && (!t.value || t.value < f.value)) t.value = f.value;
+                upd();
+              });
+            },
+            onOk: (d) => {
+              const title = val(d, "title").trim();
+              if (!title) return false;
+              const spans = $$(".spanrow", d)
+                .map((r) => ({
+                  from: r.querySelector("[name=sf]").value,
+                  to: r.querySelector("[name=st]").value || r.querySelector("[name=sf]").value,
+                }))
+                .filter((s) => s.from);
+              const [st, ro] = ddPicked(d);
+              const rec = id
+                ? g
+                : {
+                    id: uid(),
+                    vpId: vp.id,
+                    order: Math.max(0, ...gtOf(vp.id).map((x) => (x.order ?? 0) + 1)),
+                    staffIds: [],
+                    roles: [],
+                  };
+              Object.assign(rec, { title, phaseId: val(d, "phaseId"), roleHint: val(d, "roleHint").trim() });
+              if (!id) rec.progress = 0;
+              setSpans(rec, spans);
+              if (id) addNote(d, id);
+              put("gtasks", rec);
+              applyAssignees(rec, st, ro);
+              const p = d.querySelector("form").dataset.reopen ? -1 : +val(d, "progress");
+              if (p !== (rec.progress || 0) || d.querySelector("form").dataset.reopen) setGtProgress(rec, p);
+              gtCommit(
+                `${id ? "Edited" : "Added"} project task "${title}" (${vp.name})${p >= 100 && id ? " — marked complete" : ""}`,
+              );
+            },
+            extra: id
+              ? [
+                  completeBtn(g),
+                  {
+                    label: "Delete",
+                    cls: "danger",
+                    fn: () => {
+                      if (
+                        !confirm(
+                          `Delete "${g.title}" from ${vp.name}? Its unfinished half-days are removed from the calendar.`,
+                        )
+                      )
+                        return false;
+                      removeGtask(g);
+                      gtCommit(`Deleted project task "${g.title}" (${vp.name})`);
+                    },
+                  },
+                ]
+              : [],
+          },
+        );
+      }
+      function askText(title, label, value, cb) {
+        modal(title, `<label>${label}<input name="v" required value="${esc(value || "")}"></label>`, {
+          onOk: (d) => {
+            const v = val(d, "v").trim();
+            if (!v) return false;
+            cb(v);
+          },
+        });
+      }
+      function autofillModal(vp) {
+        modal(
+          "Auto-fill dates",
+          `<p class="muted" style="margin-top:0">Lays tasks out one after another, phase by phase, skipping weekends and holidays. A one-time helper: nothing is linked afterwards, so adjust any block freely. Tasks with team members appear on the calendar right away.</p>
+          <div class="row"><label>Start from<input type="date" name="from" value="${vp.startDate || today()}"></label>
+          <label>Working days per task<input type="number" name="n" min="1" max="40" value="1"></label></div>
+          <label class="chk"><input type="checkbox" name="only" checked> Only tasks without dates (keep the ones already set)</label>
+          <p class="hint">Tasks that came from a saved template with their own length use that length instead.</p>`,
+          {
+            ok: "Fill dates",
+            onOk: (d) => {
+              const n = Math.max(1, +val(d, "n") || 1),
+                only = d.querySelector("[name=only]").checked;
+              let cur = toWorkDay(val(d, "from") || vp.startDate || today()),
+                cnt = 0;
+              for (const ph of vp.phases || [])
+                for (const g of gtOf(vp.id).filter((g) => g.phaseId === ph.id)) {
+                  if (only && spansOf(g).length) {
+                    if (lastDay(g) >= cur) cur = nextWorkDay(lastDay(g));
+                    continue;
+                  }
+                  let end = cur;
+                  for (let k = 1; k < (g.daysHint || n); k++) end = nextWorkDay(end);
+                  setSpans(g, [{ from: cur, to: end }]);
+                  put("gtasks", g);
+                  syncBlocksFromSpans(g);
+                  cur = nextWorkDay(end);
+                  cnt++;
+                }
+              gtCommit(`Auto-filled dates for ${cnt} task(s) in ${vp.name}`);
+            },
+          },
+        );
+      }
+
+      /* --- clicks, sliders, drags for Gantt elements (registered before the general handlers) --- */
+      document.addEventListener("click", (e) => {
+        $$("details.msel[open]").forEach((dd) => {
+          if (!dd.contains(e.target)) dd.open = false;
+        });
+        const a = e.target.closest && e.target.closest("[data-g]");
+        if (!a || a.dataset.g === "prog") return;
+        e.stopImmediatePropagation();
+        if (!meId) return;
+        const vp = GC && get("vprojects", prefs.gv),
+          ed = canEditVP(vp),
+          id = a.dataset.id,
+          ph = a.dataset.ph;
+        switch (a.dataset.g) {
+          case "view":
+            prefs.gv = id;
+            savePrefs();
+            render();
+            break;
+          case "newvp":
+            vpModal();
+            break;
+          case "mydone":
+            prefs.gvDone = a.checked;
+            savePrefs();
+            render();
+            break;
+          case "opengt":
+            gtaskModal(id);
+            break;
+          case "gdone": {
+            const g = get("gtasks", id);
+            if (!canProgressGT(g)) {
+              a.checked = !a.checked;
+              return;
+            }
+            setGtProgress(g, a.checked ? 100 : -1);
+            gtCommit(`${a.checked ? "Completed" : "Reopened"} project task "${g.title}"`);
+            break;
+          }
+          case "editvp":
+            if (ed) vpModal(vp.id);
+            break;
+          case "addgt":
+            if (ed) gtaskModal(null, vp.id, ph);
+            break;
+          case "addph":
+            if (ed)
+              askText("Add phase", "Phase name", "", (v) => {
+                vp.phases = [...(vp.phases || []), { id: uid(), name: v }];
+                put("vprojects", vp);
+                commit(`Added phase "${v}" to ${vp.name}`);
+              });
+            break;
+          case "phren": {
+            const p = vp.phases.find((x) => x.id === ph);
+            if (ed)
+              askText("Rename phase", "Phase name", p.name, (v) => {
+                vp.phases = vp.phases.map((x) => (x.id === ph ? { ...x, name: v } : x));
+                put("vprojects", vp);
+                commit(`Renamed phase "${p.name}" to "${v}" in ${vp.name}`);
+              });
+            break;
+          }
+          case "phmv": {
+            if (!ed) break;
+            const L = [...vp.phases],
+              i = L.findIndex((x) => x.id === ph),
+              j = i + +a.dataset.d;
+            if (j < 0 || j >= L.length) break;
+            [L[i], L[j]] = [L[j], L[i]];
+            vp.phases = L;
+            put("vprojects", vp);
+            commit(`Moved phase "${L[j].name}" in ${vp.name}`);
+            break;
+          }
+          case "phdel": {
+            if (!ed) break;
+            const p = vp.phases.find((x) => x.id === ph),
+              pts = gtOf(vp.id).filter((g) => g.phaseId === ph);
+            if (
+              !confirm(
+                `Delete phase "${p.name}"${pts.length ? ` and its ${pts.length} task(s)` : ""}? Their unfinished half-days are removed from the calendar.`,
+              )
+            )
+              break;
+            pts.forEach(removeGtask);
+            vp.phases = vp.phases.filter((x) => x.id !== ph);
+            put("vprojects", vp);
+            gtCommit(`Deleted phase "${p.name}" from ${vp.name}`);
+            break;
+          }
+          case "gtmv": {
+            const g = get("gtasks", id);
+            if (!canEditVP(get("vprojects", g.vpId))) break;
+            const L = gtOf(g.vpId).filter((x) => x.phaseId === g.phaseId),
+              i = L.findIndex((x) => x.id === id),
+              j = i + +a.dataset.d;
+            if (j < 0 || j >= L.length) break;
+            [L[i].order, L[j].order] = [L[j].order, L[i].order];
+            if (L[i].order === L[j].order) L[j].order += a.dataset.d > 0 ? 1 : -1;
+            put("gtasks", L[i]);
+            put("gtasks", L[j]);
+            commit(`Reordered "${g.title}" in ${get("vprojects", g.vpId).name}`);
+            break;
+          }
+          case "autofill":
+            if (ed) autofillModal(vp);
+            break;
+          case "gtoday": {
+            const sc = $("#gscroll"),
+              ti = GC.cols.indexOf(today());
+            if (sc && ti >= 0) sc.scrollLeft = Math.max(0, ti * GCW - 200);
+            else toast("Today is outside this project's timeline");
+            break;
+          }
+          case "xlsx":
+            exportGanttXlsx(vp);
+            break;
+          case "savetpl": {
+            if (!isAdmin()) break;
+            if (
+              !confirm(
+                `Use the phases and tasks of "${vp.name}" (with their current lengths) as the default template for new validation projects?`,
+              )
+            )
+              break;
+            const ts = gtOf(vp.id);
+            put("templates", {
+              id: "default",
+              deleted: false,
+              phases: vp.phases.map((p) => ({
+                name: p.name,
+                tasks: ts
+                  .filter((g) => g.phaseId === p.id)
+                  .map((g) => ({ title: g.title, roleHint: g.roleHint || "", days: workDaysOf(g) || null })),
+              })),
+            });
+            commit(`Saved "${vp.name}" as the default validation template`);
+            toast("Default template updated");
+            break;
+          }
+          case "vpdone":
+            if (!isAdmin()) break;
+            vp.status = vp.status === "done" ? "active" : "done";
+            put("vprojects", vp);
+            commit(
+              `${vp.status === "done" ? "Marked complete" : "Reopened"}: validation project "${vp.name}"`,
+            );
+            break;
+          case "delvp": {
+            if (
+              !isAdmin() ||
+              !confirm(
+                `Delete validation project "${vp.name}" and its Gantt chart? Unfinished half-days are removed from the calendar; finished ones stay as history.`,
+              )
+            )
+              break;
+            gtOf(vp.id).forEach(removeGtask);
+            del("vprojects", vp.id);
+            prefs.gv = "mine";
+            gtCommit(`Deleted validation project "${vp.name}"`);
+            break;
+          }
+        }
+      });
+      document.addEventListener("change", (e) => {
+        const a = e.target.closest && e.target.closest('[data-g="prog"]');
+        if (a) {
+          const g = get("gtasks", a.dataset.id);
+          if (!g || !canProgressGT(g)) return;
+          setGtProgress(g, +a.value);
+          gtCommit(
+            `${+a.value >= 100 ? "Completed" : "Updated progress of"} "${g.title}"${+a.value < 100 ? " to " + a.value + "%" : ""}`,
+          );
+        }
+        if (e.target.id === "fVp" || e.target.id === "fVpSt") renderGtList();
+      });
+      document.addEventListener("input", (e) => {
+        const a = e.target.closest && e.target.closest('[data-g="prog"]');
+        if (a) a.nextElementSibling.textContent = a.value + "%";
+      });
+      document.addEventListener("dragstart", (e) => {
+        const c = e.target.closest && e.target.closest("tr[data-gtask]");
+        if (!c) return;
+        e.stopImmediatePropagation();
+        const g = get("gtasks", c.dataset.gtask);
+        if (!g || !canEditVP(get("vprojects", g.vpId)) || c.getAttribute("draggable") !== "true") {
+          e.preventDefault();
+          return;
+        }
+        dragKind = "slot";
+        dragging = true;
+        e.dataTransfer.setData("text/plain", "gtask:" + g.id);
+        e.dataTransfer.effectAllowed = "move";
+        c.classList.add("dragging");
+      });
+      document.addEventListener("drop", (e) => {
+        const raw = e.dataTransfer && e.dataTransfer.getData("text/plain");
+        if (!raw || !raw.startsWith("gtask:")) return;
+        e.stopImmediatePropagation();
+        const s = e.target.closest(".slot");
+        dragging = false;
+        $$(".over").forEach((x) => x.classList.remove("over"));
+        if (!s) return;
+        e.preventDefault();
+        scheduleGtask(raw.slice(6), s.dataset.staff, s.dataset.date, s.dataset.slot);
+      });
+
+      /* --- Task list: validation-project tasks --- */
+      function renderGtList() {
+        const el = $("#gtTable");
+        if (!el) return;
+        const fv = $("#fVp"),
+          keep = fv.value;
+        fv.innerHTML = `<option value="">All validation projects</option>${vpList()
+          .map((v) => `<option value="${v.id}">${esc(v.name)}${vpActive(v) ? "" : " (completed)"}</option>`)
+          .join("")}`;
+        fv.value = vpList().some((v) => v.id === keep) ? keep : "";
+        const q = $("#q").value.trim().toLowerCase(),
+          fs = $("#fVpSt").value,
+          td = today();
+        const rows = live("gtasks")
+          .filter((g) => {
+            const vp = get("vprojects", g.vpId);
+            if (!vp || vp.deleted) return false;
+            if (fv.value ? g.vpId !== fv.value : !vpActive(vp)) return false;
+            if (q && !(g.title + " " + vp.name + " " + phaseName(vp, g.phaseId)).toLowerCase().includes(q))
+              return false;
+            const done = (g.progress || 0) >= 100;
+            if (fs === "open") return !done;
+            if (fs === "mine") return !done && teamOf(g).includes(meId);
+            if (fs === "overdue") return !done && lastDay(g) && lastDay(g) < td;
+            if (fs === "unsched") return !done && !spansOf(g).length;
+            if (fs === "done") return done;
+            return true;
+          })
+          .sort(
+            (a, b) =>
+              (lastDay(a) || "9999").localeCompare(lastDay(b) || "9999") || a.title.localeCompare(b.title),
+          );
+        el.innerHTML = rows.length
+          ? `<table><thead><tr><th style="width:34px">Done</th><th>Task</th><th>Validation project</th><th>Assigned</th><th style="width:180px">Progress</th><th>Days</th><th>Dates</th><th>Deadline (last day)</th><th></th></tr></thead><tbody>${rows
+              .map((g) => {
+                const vp = get("vprojects", g.vpId),
+                  done = (g.progress || 0) >= 100;
+                return `<tr data-gtask="${g.id}" draggable="${!done && canEditVP(vp) && teamOf(g).length > 0}" class="${done ? "isdone" : ""}"><td><input type="checkbox" data-g="gdone" data-id="${g.id}" ${done ? "checked" : ""} ${canProgressGT(g) ? "" : "disabled"}></td>
+                  <td><div class="ttl">${esc(g.title)}${notesOf(g.id).length ? ` <span class="muted">💬${notesOf(g.id).length}</span>` : ""}</div><div class="note">${esc(phaseName(vp, g.phaseId))}</div></td>
+                  <td><span class="tag"><span class="sw" style="background:${vpColor(vp)}"></span>${esc(vp.name)}</span></td>
+                  <td>${assignLabel(g)}</td>
+                  <td>${progressCtl(g)}</td><td>${workDaysOf(g) || "—"}</td><td>${fmtSpans(g)}</td><td>${lastDay(g) ? dueHTML(lastDay(g), done) : '<span class="muted">—</span>'}</td>
+                  <td><button class="mini" data-g="opengt" data-id="${g.id}">Open</button></td></tr>`;
+              })
+              .join("")}</tbody></table>`
+          : `<p class="muted">No validation-project tasks match.</p>`;
+      }
+
+      /* --- Summary: project status (team tasks only; outside-reviewer tasks are left out) --- */
+      function vpSummaryHTML() {
+        const L = vpList().filter(vpActive);
+        if (!L.length) return "";
+        return `<h3>Validation projects <span class="muted" style="font-weight:400">· team tasks only (BINFX/QA/Director-only tasks left out)</span></h3><table><thead><tr><th>Status</th><th>Project</th><th>Lead</th><th>Current phase</th><th style="width:26%">Progress (│ = expected by today)</th><th>Overdue tasks</th><th>Planned finish</th></tr></thead><tbody>${L.map(
+          (vp) => {
+            const S = vpStats(vp, true);
+            return `<tr><td><span class="badge ${S.status[1]}">${S.status[0]}</span></td><td><button class="link" data-g="view" data-id="${vp.id}" onclick="prefs.tab='val'">${esc(vp.name)}</button></td><td>${esc(vp.leadId ? staffName(vp.leadId) : "—")}</td><td>${esc(S.phase)}</td>
+            <td><span class="vbig sm"><i style="width:${S.pct}%;background:${vpColor(vp)}"></i><em style="left:${S.exp}%"></em></span> ${S.pct}%</td><td class="${S.overdue ? "overdue" : ""}">${S.overdue}</td><td>${S.finish ? dueHTML(S.finish, S.pct >= 100) : "—"}</td></tr>`;
+          },
+        ).join("")}</tbody></table>`;
+      }
+
+      /* --- Excel export in the shape of the lab's Gantt template (one column per day, static fills) --- */
+      function crc32(u8) {
+        let crc = -1;
+        for (let i = 0; i < u8.length; i++) {
+          let c = (crc ^ u8[i]) & 255;
+          for (let k = 0; k < 8; k++) c = c & 1 ? (c >>> 1) ^ 0xedb88320 : c >>> 1;
+          crc = (crc >>> 8) ^ c;
+        }
+        return (crc ^ -1) >>> 0;
+      }
+      function zipStore(files) {
+        const enc = new TextEncoder(),
+          parts = [],
+          central = [];
+        const now = new Date(),
+          dt = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate(),
+          tm = (now.getHours() << 11) | (now.getMinutes() << 5);
+        let off = 0;
+        for (const f of files) {
+          const name = enc.encode(f.name),
+            data = enc.encode(f.data),
+            crc = crc32(data);
+          const L = new DataView(new ArrayBuffer(30));
+          [
+            [0, 0x04034b50, 4],
+            [4, 20, 2],
+            [10, tm, 2],
+            [12, dt, 2],
+            [14, crc, 4],
+            [18, data.length, 4],
+            [22, data.length, 4],
+            [26, name.length, 2],
+          ].forEach(([o, v, n]) => (n === 4 ? L.setUint32(o, v, true) : L.setUint16(o, v, true)));
+          parts.push(new Uint8Array(L.buffer), name, data);
+          const C = new DataView(new ArrayBuffer(46));
+          [
+            [0, 0x02014b50, 4],
+            [4, 20, 2],
+            [6, 20, 2],
+            [12, tm, 2],
+            [14, dt, 2],
+            [16, crc, 4],
+            [20, data.length, 4],
+            [24, data.length, 4],
+            [28, name.length, 2],
+            [42, off, 4],
+          ].forEach(([o, v, n]) => (n === 4 ? C.setUint32(o, v, true) : C.setUint16(o, v, true)));
+          central.push(new Uint8Array(C.buffer), name);
+          off += 30 + name.length + data.length;
+        }
+        const size = central.reduce((a, b) => a + b.length, 0),
+          E = new DataView(new ArrayBuffer(22));
+        E.setUint32(0, 0x06054b50, true);
+        E.setUint16(8, files.length, true);
+        E.setUint16(10, files.length, true);
+        E.setUint32(12, size, true);
+        E.setUint32(16, off, true);
+        return new Blob([...parts, ...central, new Uint8Array(E.buffer)], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+      }
+      function buildGanttXlsx(vp) {
+        const ts = gtOf(vp.id),
+          cols = ganttCols(vp, ts),
+          td = today();
+        const X = (s) =>
+          String(s ?? "").replace(
+            /[&<>"]/g,
+            (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
+          );
+        const colName = (n) => {
+          let s = "";
+          for (n++; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s;
+          return s;
+        };
+        const serial = (d) =>
+          (Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) - Date.UTC(1899, 11, 30)) / 864e5;
+        const hex = vpColor(vp).replace("#", "").toUpperCase();
+        /* style ids: 0 normal,1 title,2 bold,3 date,4 header,5 phase,6 pct,7 bar,8 bar-done,9 day,10 today,11 off,12 hint,13 row date,14 centre,15 week */
+        const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<numFmts count="1"><numFmt numFmtId="164" formatCode="mmm d, yyyy"/></numFmts>
+<fonts count="6"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="16"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><i/><sz val="9"/><color rgb="FF7F7F7F"/><name val="Calibri"/></font><font><sz val="8"/><name val="Calibri"/></font></fonts>
+<fills count="9"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FF44546A"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFD9E1F2"/></patternFill></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FFBDD7EE"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FF${hex}"/></patternFill></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FFFFE699"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE7E6E6"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFF2F2F2"/></patternFill></fill></fills>
+<borders count="2"><border/><border><left style="thin"><color rgb="FFD9D9D9"/></left><right style="thin"><color rgb="FFD9D9D9"/></right><top style="thin"><color rgb="FFD9D9D9"/></top><bottom style="thin"><color rgb="FFD9D9D9"/></bottom></border></borders>
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="16">
+<xf/><xf fontId="1" applyFont="1"/><xf fontId="2" applyFont="1"/><xf numFmtId="164" applyNumberFormat="1" applyAlignment="1"><alignment horizontal="left"/></xf>
+<xf fontId="3" fillId="2" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+<xf fontId="2" fillId="3" borderId="1" applyFont="1" applyFill="1" applyBorder="1"/>
+<xf numFmtId="9" borderId="1" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center"/></xf>
+<xf fillId="4" borderId="1" applyFill="1" applyBorder="1"/><xf fillId="5" borderId="1" applyFill="1" applyBorder="1"/>
+<xf fontId="5" fillId="8" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+<xf fontId="5" fillId="6" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+<xf fillId="7" borderId="1" applyFill="1" applyBorder="1"/><xf fontId="4" borderId="1" applyFont="1" applyBorder="1"/>
+<xf numFmtId="164" borderId="1" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center"/></xf>
+<xf borderId="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center"/></xf>
+<xf fontId="2" applyFont="1"/>
+</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+        const rows = new Map();
+        const put1 = (r, c, v, s = 0, kind = "s") => {
+          if (!rows.has(r)) rows.set(r, []);
+          rows.get(r).push({ c, v, s, kind });
+        };
+        const T0 = 7; // first timeline column (H), as in the template
+        put1(1, 1, vp.name, 1);
+        put1(2, 1, `Supervisor: ${vp.supervisor || "—"}`);
+        put1(3, 1, `Project Lead: ${vp.leadId ? staffName(vp.leadId) : "—"}`);
+        put1(4, 1, `Bench Lead: ${vp.benchLeadId ? staffName(vp.benchLeadId) : "—"}`);
+        put1(2, 2, "Project Start:", 2);
+        put1(2, 3, serial(vp.startDate || td), 3, "n");
+        put1(3, 2, "Exported:", 2);
+        put1(3, 3, serial(td), 3, "n");
+        ["TASK", "ASSIGNED TO", "PROGRESS", "START", "END", "DAYS"].forEach((h, i) => put1(6, 1 + i, h, 4));
+        cols.forEach((d, i) => {
+          const c = T0 + i,
+            st = d === td ? 10 : workDay(d) ? 9 : 11;
+          if (i === 0 || wdIdx(d) === 0) put1(4, c, `Week of ${md(d)}, ${d.slice(0, 4)}`, 15);
+          put1(5, c, +d.slice(8), st, "n");
+          put1(6, c, DAYN[wdIdx(d)][0], st);
+        });
+        const saveGC = GC; // colOf() reads GC; point it at this export's columns for a moment
+        GC = { vp: vp.id, cols };
+        let r = 7;
+        for (const ph of vp.phases || []) {
+          put1(r, 1, ph.name, 5);
+          for (let c = 2; c <= 6; c++) put1(r, c, "", 5);
+          r++;
+          for (const g of ts.filter((g) => g.phaseId === ph.id)) {
+            const who = [...teamOf(g).map(staffName), ...rolesOf(g)].join(", ");
+            put1(r, 1, g.title);
+            put1(r, 2, who || (g.roleHint ? `(${g.roleHint})` : ""), who ? 0 : 12);
+            put1(r, 3, (g.progress || 0) / 100, 6, "n");
+            if (spansOf(g).length) {
+              put1(r, 4, serial(firstDay(g)), 13, "n");
+              put1(r, 5, serial(lastDay(g)), 13, "n");
+            }
+            put1(r, 6, workDaysOf(g) || "", 14, workDaysOf(g) ? "n" : "s");
+            const cells = spansOf(g).flatMap((s) => {
+              const a = colOf(s.from, "start"),
+                b = colOf(s.to, "end");
+              return b < a ? [] : [...Array(b - a + 1)].map((_, k) => a + k);
+            });
+            const k = Math.floor((cells.length * (g.progress || 0)) / 100);
+            cells.forEach((i, n) => put1(r, T0 + i, "", n < k ? 8 : workDay(cols[i]) ? 7 : 11));
+            r++;
+          }
+        }
+        GC = saveGC;
+        let sheetRows = "";
+        for (const [rn, cells] of [...rows].sort((a, b) => a[0] - b[0])) {
+          cells.sort((a, b) => a.c - b.c);
+          sheetRows += `<row r="${rn}">${cells
+            .map((x) => {
+              const ref = colName(x.c) + rn;
+              if (x.kind === "n") return `<c r="${ref}" s="${x.s}"><v>${x.v}</v></c>`;
+              return x.v === ""
+                ? `<c r="${ref}" s="${x.s}"/>`
+                : `<c r="${ref}" s="${x.s}" t="inlineStr"><is><t xml:space="preserve">${X(x.v)}</t></is></c>`;
+            })
+            .join("")}</row>`;
+        }
+        const widths = [3, 40, 24, 13, 13, 13, 8];
+        const colsXml =
+          widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("") +
+          `<col min="${T0 + 1}" max="${T0 + cols.length}" width="3.4" customWidth="1"/>`;
+        const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<sheetViews><sheetView workbookViewId="0" showGridLines="0"><pane xSplit="${T0}" ySplit="6" topLeftCell="${colName(T0)}7" activePane="bottomRight" state="frozen"/></sheetView></sheetViews>
+<sheetFormatPr defaultRowHeight="15"/><cols>${colsXml}</cols><sheetData>${sheetRows}</sheetData>
+<pageMargins left="0.3" right="0.3" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup orientation="landscape"/></worksheet>`;
+        const sheetName = (vp.name.replace(/[\[\]:*?/\\]/g, " ").slice(0, 31) || "Gantt").trim();
+        return zipStore([
+          {
+            name: "[Content_Types].xml",
+            data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`,
+          },
+          {
+            name: "_rels/.rels",
+            data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
+          },
+          {
+            name: "xl/workbook.xml",
+            data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${X(sheetName)}" sheetId="1" r:id="rId1"/></sheets></workbook>`,
+          },
+          {
+            name: "xl/_rels/workbook.xml.rels",
+            data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`,
+          },
+          { name: "xl/styles.xml", data: styles },
+          { name: "xl/worksheets/sheet1.xml", data: sheet },
+        ]);
+      }
+      function exportGanttXlsx(vp) {
+        const blob = buildGanttXlsx(vp),
+          a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `${vp.name.replace(/[^\w\- ]+/g, "").trim() || "project"} Gantt ${today()}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 3000);
       }
 
       /* ---------- events ---------- */
@@ -4263,6 +6356,7 @@
   <b>Weekly tasks</b> (column next to the names) — things a person covers all week, e.g. room preventive maintenance. No completion box. “⧉ last week” copies last week's into this week. <b>Daily joint tasks</b> (row under the dates) — lab meetings and similar; leave people unticked for everyone. Tick “Holiday” to mark everyone out of office (full or half day, single date or range). Both can be dragged to another person or day.<br><br>
   <b>Task list</b> — set priority, duration in half-days, and deadline. Drag a row onto the “Weekly calendar” tab, then drop it on a slot; multi-half-day tasks fill consecutive half-days, skipping weekends and time out of office. Recurring tasks are added to a week only when you click “↻ Add recurring tasks” in the calendar's To-schedule panel.<br><br>
   <b>Logging in & roles</b> — everyone logs in with their name and a personal 6-digit PIN (created the first time they log in). <b>Administrators</b> can do everything: assign, move and edit tasks, manage weekly/joint tasks and holidays, view the Summary tab, add or remove staff, change roles and reset PINs (Staff button). <b>Users</b> can tick tasks complete and add notes; they see the calendar and task list but can't change the schedule. 💬 shows how many notes a task has. You're logged out after ${IDLE_MIN} minutes without activity.<br><br>
+  <b>Validations</b> — each validation project has a Gantt chart that starts from the lab's template (R&D → Validation Plan → Validation Runs → Report → Checklist → Review). Administrators create projects; the named project lead can edit that project's chart too. Use the “Assigned to” dropdown to pick team members and/or BINFX, QA or Director (outside reviewers aren't on the calendar or in the Summary). Plan in whole days: drag across a row to add a date block — a task can have several — and drag blocks to move or resize them. Every working day of a task with team members shows on their calendar as AM and PM half-days; moving, reassigning or removing those on the calendar updates the Gantt chart, and ticking them updates progress. “★ My tasks” lists everything assigned to you. Export to Excel gives a copy in the template's layout.<br><br>
   <b>Undo / Redo</b> — ↶ Undo (Ctrl+Z) reverses <i>your own</i> most recent change; click again to go further back (up to ${UNDO_MAX} changes, kept ${UNDO_DAYS} days, and it works after logging out or on another PC). ↷ Redo (Ctrl+Y) re-applies what you undid, until you make a new change. If a colleague has edited the same item since, you'll be told who and asked before their edit is overwritten. Hover the buttons to see which change they'll affect.<br><br>
   <b>Archiving</b> — to keep the shared file small and fast, completed work older than ${ARCHIVE_MONTHS} months is moved automatically into yearly files (<code>team-planner-archive-YYYY.json</code>) in the same folder. Open and unfinished tasks are never archived. The Summary tab reads the archives whenever the chosen period reaches back that far. Administrators can also run it from the ⋯ menu.<br><br>
   <b>Sharing</b> — everyone opens this page in Edge or Chrome and picks the same folder. Edits save within a second and other people's changes appear within about 5 seconds. If two people edit the <i>same</i> item at the same moment, the later save wins; different items never overwrite each other. A daily copy of the data is kept in the folder's <code>backups</code> subfolder.</div>`,
