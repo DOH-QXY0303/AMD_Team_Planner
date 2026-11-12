@@ -15,6 +15,8 @@
       file every 4 seconds. Copies are merged record by record (newest edit wins), so two
       people editing different things never overwrite each other.
     - People log in with their name and a personal 6-digit PIN (stored only as a salted hash).
+      Names, roles and PIN hashes are sealed in the data file ("sec" codes): edited or copied codes
+      stop working, and plain-text roles typed into the file are ignored.
       Administrators can do everything; Users can tick tasks complete and add notes.
     - Undo/Redo history (20 steps per person, 7 days) is kept in the data file.
     - Validations tab: one Gantt chart per validation project, started from the lab's template.
@@ -2387,6 +2389,7 @@
         "tickDone",
         "autoTicked",
       ];
+      /* "sec" (sealed name/role/PIN) is deliberately left last on each staff line */
       function orderKeys(r) {
         const o = {};
         for (const k of KEY_ORDER) if (k in r) o[k] = r[k];
@@ -2413,21 +2416,26 @@
         L.push("}");
         return L.join("\n") + "\n";
       }
-      const dataJSON = (db) =>
-        toFileJSON(db, {
+      const dataJSON = (db) => {
+        const S = sealDB(db);
+        return toFileJSON(S, {
           app: APP_NAME,
           file: "main data",
           schema: SCHEMA,
           savedAt: new Date().toISOString(),
-          meta: db.meta || {},
+          meta: S.meta,
         });
+      };
       async function readDisk() {
         for (let i = 0; i < 4; i++) {
           const fh = await dirHandle.getFileHandle(DATA_FILE, { create: true });
           const f = await fh.getFile();
           const txt = await f.text();
           try {
-            return { data: txt.trim() ? JSON.parse(txt) : emptyDB(), sig: f.lastModified + ":" + f.size };
+            return {
+              data: txt.trim() ? unsealDB(JSON.parse(txt)) : emptyDB(),
+              sig: f.lastModified + ":" + f.size,
+            };
           } catch (e) {
             if (i === 3) throw new Error("Data file is unreadable: " + e.message);
             await sleep(400);
@@ -2481,7 +2489,7 @@
             await backup();
             await writeDisk(DB);
           } else if (mode === "local") {
-            localStorage.setItem(LS_DATA, JSON.stringify(DB));
+            localStorage.setItem(LS_DATA, JSON.stringify(sealDB(DB)));
           }
           pendingSave = false;
           setStatus("ok", (mode === "folder" ? "Saved " : "Saved locally ") + fmtTs(Date.now()).slice(11));
@@ -2504,7 +2512,7 @@
           const f = await (await dirHandle.getFileHandle(DATA_FILE)).getFile();
           const sig = f.lastModified + ":" + f.size;
           if (sig !== lastSig || force) {
-            const data = JSON.parse(await f.text());
+            const data = unsealDB(JSON.parse(await f.text()));
             DB = mergeDB(data, DB);
             rebuildShadow();
             lastSig = sig;
@@ -2695,7 +2703,10 @@
         $("#cLocal").onclick = () => {
           mode = "local";
           try {
-            DB = mergeDB(JSON.parse(localStorage.getItem(LS_DATA) || "null") || emptyDB(), emptyDB());
+            DB = mergeDB(
+              unsealDB(JSON.parse(localStorage.getItem(LS_DATA) || "null")) || emptyDB(),
+              emptyDB(),
+            );
           } catch {
             DB = emptyDB();
           }
@@ -2789,6 +2800,135 @@
           [a, bb, c, d, e, f, g, h].forEach((v, i) => (H[i] = (H[i] + v) | 0));
         }
         return H.map((x) => (x >>> 0).toString(16).padStart(8, "0")).join("");
+      }
+
+      /* ---------- sealed login records ----------
+         Each person's name, role and PIN hash are written to the data file as one sealed code ("sec")
+         instead of readable text. The seal is keyed to that person's id, so a code that has been edited,
+         or copied onto someone else's record, no longer opens: the planner then treats the record as
+         damaged (no login until an administrator resets it). Once a file has been sealed, any plain-text
+         role or PIN typed into it is ignored. This protects the file from casual editing (for example in
+         Notepad); it is not protection against someone able to read this program's code. */
+      const SEAL_KEY = "c7f3a9e14b2d58f0a6e1d4c39b7f2e85";
+      const SEALED = ["name", "role", "pinSalt", "pinHash", "sealBroken"];
+      const hexToBytes = (h) => Uint8Array.from((h.match(/../g) || []).map((x) => parseInt(x, 16)));
+      const bytesToHex = (b) => [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
+      const sealCache = new Map(),
+        unsealCache = new Map();
+      function sealStream(key, nonce, n) {
+        const out = new Uint8Array(n);
+        for (let i = 0, c = 0; i < n; c++) {
+          const blk = hexToBytes(sha256(key + ":" + nonce + ":" + c));
+          for (let j = 0; j < 32 && i < n; j++, i++) out[i] = blk[j];
+        }
+        return out;
+      }
+      const sealMac = (key, nonce, ct) => sha256(key + ":mac:" + sha256(key + ":in:" + nonce + ":" + ct));
+      function seal(id, payload) {
+        const json = JSON.stringify({ id, ...payload }),
+          ck = id + "|" + json;
+        if (sealCache.has(ck)) return sealCache.get(ck);
+        const key = sha256(SEAL_KEY + ":" + id),
+          nonce = sha256(key + ":nonce:" + json).slice(0, 32);
+        const pt = new TextEncoder().encode(json),
+          ks = sealStream(key, nonce, pt.length);
+        const ct = bytesToHex(pt.map((b, i) => b ^ ks[i]));
+        const out = `v1.${nonce}.${ct}.${sealMac(key, nonce, ct)}`;
+        sealCache.set(ck, out);
+        return out;
+      }
+      function unseal(id, sec) {
+        const ck = id + "|" + sec;
+        if (unsealCache.has(ck)) return unsealCache.get(ck);
+        let res = null;
+        try {
+          const [v, nonce, ct, mac] = String(sec).split(".");
+          const key = sha256(SEAL_KEY + ":" + id);
+          if (v === "v1" && sealMac(key, nonce, ct) === mac) {
+            const b = hexToBytes(ct),
+              ks = sealStream(key, nonce, b.length);
+            const o = JSON.parse(new TextDecoder().decode(b.map((x, i) => x ^ ks[i])));
+            if (o.id === id) res = o;
+          }
+        } catch {}
+        unsealCache.set(ck, res);
+        return res;
+      }
+      function sealStaff(r) {
+        const o = {},
+          p = {};
+        for (const k of Object.keys(r)) if (!SEALED.includes(k)) o[k] = r[k];
+        for (const k of SEALED) if (r[k] != null && r[k] !== "" && r[k] !== false) p[k] = r[k];
+        o.sec = seal(r.id, p);
+        return o;
+      }
+      /* copy of the data with every staff record (and staff snapshots in undo history) sealed */
+      function sealDB(db) {
+        const o = {
+          ...db,
+          meta: { ...(db.meta || {}), sealed: true },
+          staff: (db.staff || []).map(sealStaff),
+        };
+        if (db.undo)
+          o.undo = db.undo.map((u) =>
+            (u.changes || []).some((ch) => ch.c === "staff")
+              ? {
+                  ...u,
+                  changes: u.changes.map((ch) =>
+                    ch.c === "staff"
+                      ? {
+                          ...ch,
+                          before: ch.before && sealStaff(ch.before),
+                          after: ch.after && sealStaff(ch.after),
+                        }
+                      : ch,
+                  ),
+                }
+              : u,
+          );
+        return o;
+      }
+      /* open sealed staff records in data just read from disk (in place); plain-text roles/PINs in a
+         sealed file are ignored, and a record whose seal doesn't open is marked damaged */
+      function unsealDB(d) {
+        if (!d || !Array.isArray(d.staff)) return d;
+        const sealedFile = !!d.meta?.sealed || d.staff.some((r) => r.sec);
+        const open = (r) => {
+          if (r.sec) {
+            const p = unseal(r.id, r.sec);
+            delete r.sec;
+            for (const k of SEALED) delete r[k];
+            if (p) {
+              for (const k of SEALED) if (p[k] != null) r[k] = p[k];
+            } else Object.assign(r, { name: "Damaged record", role: "user", sealBroken: true });
+            return true;
+          }
+          if (sealedFile) {
+            r.role = "user";
+            delete r.pinHash;
+            delete r.pinSalt;
+            delete r.sealBroken;
+            if (!r.name) r.name = "Unnamed";
+          }
+          return !sealedFile;
+        };
+        d.staff.forEach(open);
+        for (const u of d.undo || [])
+          if ((u.changes || []).some((ch) => ch.c === "staff")) {
+            let good = true;
+            for (const ch of u.changes)
+              if (ch.c === "staff")
+                for (const side of ["before", "after"])
+                  if (ch[side]) {
+                    const had = !!ch[side].sec;
+                    if (!open(ch[side]) || (had && ch[side].sealBroken)) good = false;
+                  }
+            if (!good) {
+              u.deleted = true;
+              u.changes = [];
+            }
+          }
+        return d;
       }
       const hashPin = (salt, pin) => {
         let h = salt + ":" + pin;
@@ -2895,9 +3035,20 @@
         const area = () => {
           const r = get("staff", f.who.value),
             first = !r.pinHash;
-          $("#pinArea").innerHTML = first
-            ? `<p class="hint">First time logging in: create your own 6-digit PIN.${anyAdmin() ? "" : " <b>No administrator exists yet, so you will become the administrator.</b>"}</p>${pinInput("pin", "New PIN")}${pinInput("pin2", "Confirm PIN")}`
-            : pinInput("pin", "PIN");
+          if (r.sealBroken) {
+            $("#pinArea").innerHTML =
+              `<p class="overdue">This account's record in the data file was changed outside the planner, so it can't be used. Ask an administrator to reset it (Staff → Reset).</p>`;
+            $("#lbtn").disabled = true;
+            return;
+          }
+          $("#lbtn").disabled = false;
+          $("#pinArea").innerHTML =
+            (anyAdmin()
+              ? ""
+              : `<p class="overdue">No administrator was found in the data file. If an administrator's record was removed, restore the file from the <b>backups</b> folder.</p>`) +
+            (first
+              ? `<p class="hint">First time logging in: create your own 6-digit PIN.</p>${pinInput("pin", "New PIN")}${pinInput("pin2", "Confirm PIN")}`
+              : pinInput("pin", "PIN"));
           $("#lbtn").textContent = first ? "Set PIN & log in" : "Log in";
           f.pin.focus();
         };
@@ -2909,7 +3060,7 @@
         f.onsubmit = (e) => {
           e.preventDefault();
           const r = get("staff", f.who.value);
-          if (!r || r.deleted) return;
+          if (!r || r.deleted || r.sealBroken) return;
           if (Date.now() < (lockedUntil[r.id] || 0))
             return err(
               `Too many attempts. Try again in ${Math.ceil((lockedUntil[r.id] - Date.now()) / 1000)} s.`,
@@ -2917,12 +3068,11 @@
           if (!r.pinHash) {
             const pr = pinProblem(f.pin.value, f.pin2.value);
             if (pr) return err(pr);
-            const boot = !anyAdmin();
             me = r.name;
             setPin(r, f.pin.value);
-            r.role = boot ? "admin" : r.role || "user";
+            r.role = r.role || "user";
             put("staff", r);
-            log(`${r.name} created a PIN${boot ? " and became administrator" : ""}`, false);
+            log(`${r.name} created a PIN`, false);
             scheduleSave();
             startSession(r);
             return;
@@ -3332,7 +3482,7 @@
           staffList()
             .map(
               (s, i, a) =>
-                `<div class="srow" data-id="${s.id}"><input type="color" value="${s.color}" data-f="color"><input value="${esc(s.name)}" data-f="name"><select class="rolesel" data-role="1">${["user", "admin"].map((r) => `<option value="${r}" ${(s.role || "user") === r ? "selected" : ""}>${roleName(r)}</option>`).join("")}</select><span class="pinst">${s.pinHash ? "🔒 PIN set" : "○ No PIN yet"}</span><button type="button" class="mini" data-reset="1" ${s.pinHash && s.id !== meId ? "" : "disabled"} title="${s.id === meId ? "Use My account to change your own PIN" : "Clear the PIN so they create a new one at next login"}">Reset PIN</button><button type="button" class="mini" data-mv="-1" ${i ? "" : "disabled"}>↑</button><button type="button" class="mini" data-mv="1" ${i < a.length - 1 ? "" : "disabled"}>↓</button><button type="button" class="mini danger" data-rm="1" ${s.id === meId ? 'disabled title="You can\'t remove yourself"' : ""}>Remove</button></div>`,
+                `<div class="srow" data-id="${s.id}"><input type="color" value="${s.color}" data-f="color"><input value="${esc(s.name)}" data-f="name"><select class="rolesel" data-role="1">${["user", "admin"].map((r) => `<option value="${r}" ${(s.role || "user") === r ? "selected" : ""}>${roleName(r)}</option>`).join("")}</select><span class="pinst" ${s.sealBroken ? 'style="color:var(--danger)" title="Changed outside the planner — Reset to repair"' : ""}>${s.sealBroken ? "⚠ Damaged" : s.pinHash ? "🔒 PIN set" : "○ No PIN yet"}</span><button type="button" class="mini" data-reset="1" ${(s.pinHash || s.sealBroken) && s.id !== meId ? "" : "disabled"} title="${s.id === meId ? "Use My account to change your own PIN" : "Clear the PIN so they create a new one at next login"}">Reset PIN</button><button type="button" class="mini" data-mv="-1" ${i ? "" : "disabled"}>↑</button><button type="button" class="mini" data-mv="1" ${i < a.length - 1 ? "" : "disabled"}>↓</button><button type="button" class="mini danger" data-rm="1" ${s.id === meId ? 'disabled title="You can\'t remove yourself"' : ""}>Remove</button></div>`,
             )
             .join("") || '<p class="muted">No staff yet.</p>';
         modal(
@@ -3437,6 +3587,7 @@
                   const s = get("staff", id);
                   if (!confirm(`Reset ${s.name}'s PIN? They'll create a new one the next time they log in.`))
                     return;
+                  delete s.sealBroken;
                   s.pinHash = "";
                   s.pinSalt = "";
                   put("staff", s);
@@ -6337,7 +6488,7 @@
         const f = e.target.files[0];
         if (!f || !isAdmin()) return;
         try {
-          const d = JSON.parse(await f.text());
+          const d = unsealDB(JSON.parse(await f.text()));
           if (!d || !Array.isArray(d.tasks)) throw new Error("Not a Team Planner data file");
           DB = mergeDB(d, DB);
           rebuildShadow();
@@ -6355,7 +6506,7 @@
   <b>Calendar</b> — each person has an AM and a PM slot per day. Drag tasks between people and days. Click “+” in a slot to add a task; tick several people to make it a joint task (👥). Tick the box on a task to mark that half-day complete; a task is complete when all its half-days are. Double-click an empty slot to mark someone out (double-click again to undo), or use ✈ for date ranges.<br><br>
   <b>Weekly tasks</b> (column next to the names) — things a person covers all week, e.g. room preventive maintenance. No completion box. “⧉ last week” copies last week's into this week. <b>Daily joint tasks</b> (row under the dates) — lab meetings and similar; leave people unticked for everyone. Tick “Holiday” to mark everyone out of office (full or half day, single date or range). Both can be dragged to another person or day.<br><br>
   <b>Task list</b> — set priority, duration in half-days, and deadline. Drag a row onto the “Weekly calendar” tab, then drop it on a slot; multi-half-day tasks fill consecutive half-days, skipping weekends and time out of office. Recurring tasks are added to a week only when you click “↻ Add recurring tasks” in the calendar's To-schedule panel.<br><br>
-  <b>Logging in & roles</b> — everyone logs in with their name and a personal 6-digit PIN (created the first time they log in). <b>Administrators</b> can do everything: assign, move and edit tasks, manage weekly/joint tasks and holidays, view the Summary tab, add or remove staff, change roles and reset PINs (Staff button). <b>Users</b> can tick tasks complete and add notes; they see the calendar and task list but can't change the schedule. 💬 shows how many notes a task has. You're logged out after ${IDLE_MIN} minutes without activity.<br><br>
+  <b>Logging in & roles</b> — everyone logs in with their name and a personal 6-digit PIN (created the first time they log in). <b>Administrators</b> can do everything: assign, move and edit tasks, manage weekly/joint tasks and holidays, view the Summary tab, add or remove staff, change roles and reset PINs (Staff button). <b>Users</b> can tick tasks complete and add notes; they see the calendar and task list but can't change the schedule. 💬 shows how many notes a task has. You're logged out after ${IDLE_MIN} minutes without activity. Names, roles and PINs are stored sealed in the data file, so editing them by hand doesn't work — a changed record is locked until an administrator uses Reset in Staff. Keep at least two administrators, and if one is ever lost, restore the data file from the <b>backups</b> folder.<br><br>
   <b>Validations</b> — each validation project has a Gantt chart that starts from the lab's template (R&D → Validation Plan → Validation Runs → Report → Checklist → Review). Administrators create projects; the named project lead can edit that project's chart too. Use the “Assigned to” dropdown to pick team members and/or BINFX, QA or Director (outside reviewers aren't on the calendar or in the Summary). Plan in whole days: drag across a row to add a date block — a task can have several — and drag blocks to move or resize them. Every working day of a task with team members shows on their calendar as AM and PM half-days; moving, reassigning or removing those on the calendar updates the Gantt chart, and ticking them updates progress. “★ My tasks” lists everything assigned to you. Export to Excel gives a copy in the template's layout.<br><br>
   <b>Undo / Redo</b> — ↶ Undo (Ctrl+Z) reverses <i>your own</i> most recent change; click again to go further back (up to ${UNDO_MAX} changes, kept ${UNDO_DAYS} days, and it works after logging out or on another PC). ↷ Redo (Ctrl+Y) re-applies what you undid, until you make a new change. If a colleague has edited the same item since, you'll be told who and asked before their edit is overwritten. Hover the buttons to see which change they'll affect.<br><br>
   <b>Archiving</b> — to keep the shared file small and fast, completed work older than ${ARCHIVE_MONTHS} months is moved automatically into yearly files (<code>team-planner-archive-YYYY.json</code>) in the same folder. Open and unfinished tasks are never archived. The Summary tab reads the archives whenever the chosen period reaches back that far. Administrators can also run it from the ⋯ menu.<br><br>
