@@ -19,6 +19,7 @@
       stop working, and plain-text roles typed into the file are ignored.
       Administrators can do everything; Users can tick tasks complete and add notes.
     - Undo/Redo history (20 steps per person, 7 days) is kept in the data file.
+    - Out of office can be one-off dates or a repeating pattern (flex days: weekly or every 2 weeks).
     - Validations tab: one Gantt chart per validation project, started from the lab's template.
       Admins and each project's lead edit it; assigned tasks show as bands on the calendar.
 
@@ -1543,6 +1544,20 @@
         color: var(--muted);
         text-decoration: line-through;
       }
+      .fxh {
+        font-size: 10.5px;
+        font-weight: 500;
+        color: var(--muted);
+        white-space: nowrap;
+        cursor: help;
+      }
+      dialog .row > label {
+        min-width: 0;
+      }
+      dialog .row input[type="date"] {
+        min-width: 0;
+        width: 100%;
+      }
     </style>
   </head>
   <body>
@@ -1751,6 +1766,7 @@
         "tasks",
         "blocks",
         "absences",
+        "flex",
         "rules",
         "weekly",
         "daily",
@@ -1816,6 +1832,7 @@
         tasks: [],
         blocks: [],
         absences: [],
+        flex: [],
         rules: [],
         weekly: [],
         daily: [],
@@ -2143,10 +2160,35 @@
       function absenceAt(sid, date, slot) {
         const h = holidayAt(date, slot);
         if (h) return { holiday: true, id: h.id, reason: h.title, part: h.part || "ALL" };
-        return live("absences").find(
+        const a = live("absences").find(
           (a) => a.staffId === sid && a.from <= date && date <= a.to && (a.part === "ALL" || a.part === slot),
         );
+        if (a) return a;
+        const f = flexAt(sid, date, slot);
+        return f
+          ? { flex: true, id: f.id, reason: (f.reason || "Flex day") + " ↻", part: f.part }
+          : undefined;
       }
+      /* ---------- recurring out-of-office (flex days) ----------
+         flex  {id, staffId, weekdays:[0=Mon … 4=Fri], freq:'weekly'|'biweekly', from, until, part, reason, skips:[dates]}
+         Every-2-weeks patterns count weeks from the week of 'from'. A date in 'skips' is a one-off
+         exception (the person is in that day). */
+      function flexOn(f, date) {
+        if (date < f.from || (f.until && date > f.until)) return false;
+        if (!(f.weekdays || []).includes(wdIdx(date))) return false;
+        if ((f.skips || []).includes(date)) return false;
+        if (f.freq === "biweekly") {
+          const wk = Math.round((parse(mondayOf(date)) - parse(mondayOf(f.from))) / (7 * 864e5));
+          if (wk % 2 !== 0) return false;
+        }
+        return true;
+      }
+      const flexAt = (sid, date, slot) =>
+        live("flex").find(
+          (f) => f.staffId === sid && (f.part === "ALL" || f.part === slot) && flexOn(f, date),
+        );
+      const flexText = (f) =>
+        `${(f.weekdays || []).map((i) => DAYN[i]).join(", ")} ${f.freq === "biweekly" ? "every 2 weeks" : "every week"}${f.part !== "ALL" ? " (" + f.part + ")" : ""} from ${md(f.from)}${f.until ? " until " + md(f.until) : ""}`;
       function nextSlot(d, s) {
         if (s === "AM") return [d, "PM"];
         let n = addDays(d, 1);
@@ -2366,6 +2408,10 @@
         "user",
         "msg",
         "reason",
+        "weekdays",
+        "freq",
+        "until",
+        "skips",
         "notes",
         "color",
         "order",
@@ -3687,7 +3733,7 @@
           },
         );
       }
-      function absenceModal(staff, date) {
+      function absenceModal(staff, date, recurring) {
         if (!staffList().length) {
           alert("Add staff first.");
           return;
@@ -3696,27 +3742,77 @@
           const a = live("absences")
             .filter((x) => x.to >= today())
             .sort((x, y) => x.from.localeCompare(y.from));
-          return a.length
-            ? a
-                .map(
-                  (x) =>
-                    `<div><span><b>${esc(staffName(x.staffId))}</b> · ${md(x.from)}${x.to !== x.from ? " – " + md(x.to) : ""}${x.part !== "ALL" ? " " + x.part : ""}${x.reason ? " · " + esc(x.reason) : ""}</span><button type="button" class="mini danger" data-rmab="${x.id}">×</button></div>`,
-                )
-                .join("")
-            : '<p class="muted">None.</p>';
+          const f = live("flex")
+            .filter((x) => !x.until || x.until >= today())
+            .sort((x, y) => staffName(x.staffId).localeCompare(staffName(y.staffId)));
+          const rows =
+            f
+              .map(
+                (x) =>
+                  `<div><span><b>${esc(staffName(x.staffId))}</b> · ↻ ${esc(flexText(x))}${x.reason ? " · " + esc(x.reason) : ""}${
+                    (x.skips || []).filter((d) => d >= today()).length
+                      ? ` <span class="muted">(skipping ${(x.skips || [])
+                          .filter((d) => d >= today())
+                          .map(md)
+                          .join(", ")})</span>`
+                      : ""
+                  }</span><button type="button" class="mini danger" data-rmfx="${x.id}" title="Stop this repeating out-of-office">×</button></div>`,
+              )
+              .join("") +
+            a
+              .map(
+                (x) =>
+                  `<div><span><b>${esc(staffName(x.staffId))}</b> · ${md(x.from)}${x.to !== x.from ? " – " + md(x.to) : ""}${x.part !== "ALL" ? " " + x.part : ""}${x.reason ? " · " + esc(x.reason) : ""}</span><button type="button" class="mini danger" data-rmab="${x.id}">×</button></div>`,
+              )
+              .join("");
+          return rows || '<p class="muted">None.</p>';
         };
+        const d0 = date || today();
         modal(
           "Out of office",
           `<label>Staff<select name="staff">${staffList()
             .map((s) => `<option value="${s.id}" ${s.id === staff ? "selected" : ""}>${esc(s.name)}</option>`)
             .join("")}</select></label>
-  <div class="row"><label>From<input type="date" name="from" value="${date || today()}" required></label><label>To<input type="date" name="to" value="${date || today()}" required></label><label>Which part<select name="part"><option value="ALL">Full day(s)</option><option value="AM">AM only</option><option value="PM">PM only</option></select></label></div>
-  <label>Reason (optional)<input name="reason" placeholder="Vacation, training, conference…"></label>
+  <div class="row" style="margin-bottom:10px"><label class="chk"><input type="radio" name="kind" value="once" ${recurring ? "" : "checked"}> One-off dates</label><label class="chk"><input type="radio" name="kind" value="repeat" ${recurring ? "checked" : ""}> Repeats (flex day, compressed schedule)</label></div>
+  <div class="once"><div class="row"><label>From<input type="date" name="from" value="${d0}"></label><label>To<input type="date" name="to" value="${d0}"></label></div></div>
+  <div class="repeat">
+    <fieldset class="staffpick"><legend>Out on</legend>${DAYN.slice(0, 5)
+      .map(
+        (n, i) =>
+          `<label class="chk"><input type="checkbox" name="wd" value="${i}" ${i === wdIdx(d0) ? "checked" : ""}>${n}</label>`,
+      )
+      .join("")}</fieldset>
+    <div class="row"><label>How often<select name="freq"><option value="weekly">Every week</option><option value="biweekly">Every 2 weeks (e.g. 9/80)</option></select></label>
+      <label>Starting<input type="date" name="rfrom" value="${d0}"></label><label>Until (optional)<input type="date" name="until"></label></div>
+    <p class="hint" style="margin-top:-4px">“Every 2 weeks” repeats in the week of the start date, then every other week. To keep someone in on one occurrence, double-click that half-day on the calendar.</p>
+  </div>
+  <div class="row"><label>Which part<select name="part"><option value="ALL">Full day(s)</option><option value="AM">AM only</option><option value="PM">PM only</option></select></label>
+    <label>Reason (optional)<input name="reason" placeholder="Vacation, training, flex day…"></label></div>
   <h4>Current & upcoming</h4><div class="ablist" id="abList">${abList()}</div>`,
           {
             ok: "Add",
             onMount: (d) => {
+              const sync = () => {
+                const rep = d.querySelector("[name=kind]:checked").value === "repeat";
+                d.querySelector(".once").hidden = rep;
+                d.querySelector(".repeat").hidden = !rep;
+                const r = d.querySelector("[name=reason]");
+                r.placeholder = rep ? "Flex day" : "Vacation, training, conference…";
+              };
+              $$("[name=kind]", d).forEach((x) => (x.onchange = sync));
+              sync();
               d.querySelector("#abList").onclick = (e) => {
+                const fx = e.target.dataset.rmfx;
+                if (fx) {
+                  const f = get("flex", fx);
+                  if (!confirm(`Stop ${staffName(f.staffId)}'s repeating out-of-office (${flexText(f)})?`))
+                    return;
+                  del("flex", fx);
+                  log(`Removed recurring out-of-office for ${staffName(f.staffId)} (${flexText(f)})`);
+                  scheduleSave();
+                  d.querySelector("#abList").innerHTML = abList();
+                  return;
+                }
                 const id = e.target.dataset.rmab;
                 if (!id) return;
                 const a = get("absences", id);
@@ -3727,6 +3823,39 @@
               };
             },
             onOk: (d) => {
+              const sid = val(d, "staff"),
+                part = val(d, "part"),
+                reason = val(d, "reason").trim();
+              if (d.querySelector("[name=kind]:checked").value === "repeat") {
+                const weekdays = $$("[name=wd]:checked", d).map((x) => +x.value);
+                const from = val(d, "rfrom"),
+                  until = val(d, "until");
+                if (!weekdays.length) {
+                  alert("Tick at least one weekday.");
+                  return false;
+                }
+                if (!from) {
+                  alert("Pick a start date.");
+                  return false;
+                }
+                if (until && until < from) {
+                  alert("“Until” must be after the start date.");
+                  return false;
+                }
+                const f = put("flex", {
+                  id: uid(),
+                  staffId: sid,
+                  weekdays,
+                  freq: val(d, "freq"),
+                  from,
+                  until,
+                  part,
+                  reason: reason || "Flex day",
+                  skips: [],
+                });
+                commit(`${staffName(sid)} out of office ${flexText(f)}${reason ? " (" + reason + ")" : ""}`);
+                return;
+              }
               let from = val(d, "from"),
                 to = val(d, "to");
               if (!from || !to) {
@@ -3734,17 +3863,9 @@
                 return false;
               }
               if (to < from) [from, to] = [to, from];
-              const sid = val(d, "staff");
-              put("absences", {
-                id: uid(),
-                staffId: sid,
-                from,
-                to,
-                part: val(d, "part"),
-                reason: val(d, "reason").trim(),
-              });
+              put("absences", { id: uid(), staffId: sid, from, to, part, reason });
               commit(
-                `${staffName(sid)} out of office ${from}${to !== from ? " to " + to : ""}${val(d, "part") !== "ALL" ? " " + val(d, "part") : ""}`,
+                `${staffName(sid)} out of office ${from}${to !== from ? " to " + to : ""}${part !== "ALL" ? " " + part : ""}`,
               );
             },
           },
@@ -4105,7 +4226,12 @@
         if (!staff.length)
           h += `<div class="empty" style="grid-column:1/-1">No staff yet. <button class="btn primary" data-act="staff">Add staff</button></div>`;
         for (const s of staff) {
-          h += `<div class="sname"><span class="sw" style="background:${s.color}"></span><span class="nm" title="${esc(s.name)}">${esc(s.name)}</span><button class="mini admin-only" data-act="ooo" data-staff="${s.id}" title="Mark out of office">✈</button></div>`;
+          h += `<div class="sname"><span class="sw" style="background:${s.color}"></span><span class="nm" title="${esc(s.name)}">${esc(s.name)}</span>${(() => {
+            const fx = live("flex").filter((f) => f.staffId === s.id && (!f.until || f.until >= weekStart));
+            return fx.length
+              ? `<span class="fxh" title="${esc("Recurring out of office:\n" + fx.map(flexText).join("\n"))}">↻ ${fx.map((f) => f.weekdays.map((i) => DAYN[i]).join("/") + (f.freq === "biweekly" ? "²" : "")).join(", ")}</span>`
+              : "";
+          })()}<button class="mini admin-only" data-act="ooo" data-staff="${s.id}" title="Mark out of office">✈</button></div>`;
           h += `<div class="wcell" data-staff="${s.id}">${weekly
             .filter((w) => w.staffId === s.id)
             .map(
@@ -4556,6 +4682,22 @@
               "",
               "",
             ]),
+          ...[...Array(7)].flatMap((_, i) => {
+            const d = addDays(weekStart, i);
+            return live("flex")
+              .filter((f) => flexOn(f, d) && get("staff", f.staffId) && !get("staff", f.staffId).deleted)
+              .map((f) => [
+                d,
+                DAYN[wdIdx(d)],
+                f.part === "ALL" ? "Full day" : f.part,
+                staffName(f.staffId),
+                "OUT OF OFFICE – " + (f.reason || "Flex day") + " (recurring)",
+                "",
+                "",
+                "",
+                "",
+              ]);
+          }),
         ]);
       }
       function exportSummary() {
@@ -6344,6 +6486,19 @@
           dailyModal(date, ab.id);
           return;
         }
+        if (ab && ab.flex) {
+          const f = get("flex", ab.id);
+          if (
+            confirm(
+              `${staffName(staff)} is normally out then (${flexText(f)}).\n\nKeep them in on ${DAYN[wdIdx(date)]} ${md(date)} only?`,
+            )
+          ) {
+            f.skips = [...new Set([...(f.skips || []), date])].sort();
+            put("flex", f);
+            commit(`${staffName(staff)} in on ${date} (flex day skipped)`);
+          }
+          return;
+        }
         if (!ab) {
           put("absences", { id: uid(), staffId: staff, from: date, to: date, part: slot, reason: "" });
           commit(`${staffName(staff)} out of office ${date} ${slot}`);
@@ -6503,7 +6658,7 @@
         modal(
           "How to use",
           `<div style="font-size:13px;line-height:1.55">
-  <b>Calendar</b> — each person has an AM and a PM slot per day. Drag tasks between people and days. Click “+” in a slot to add a task; tick several people to make it a joint task (👥). Tick the box on a task to mark that half-day complete; a task is complete when all its half-days are. Double-click an empty slot to mark someone out (double-click again to undo), or use ✈ for date ranges.<br><br>
+  <b>Calendar</b> — each person has an AM and a PM slot per day. Drag tasks between people and days. Click “+” in a slot to add a task; tick several people to make it a joint task (👥). Tick the box on a task to mark that half-day complete; a task is complete when all its half-days are. Double-click an empty slot to mark someone out (double-click again to undo), or use ✈ for date ranges. For staff on a 4-day week or 9/80 schedule, choose “Repeats” in ✈ Out of office (every week or every 2 weeks); ↻ next to their name shows the pattern, and double-clicking one of their flex half-days keeps them in on just that date.<br><br>
   <b>Weekly tasks</b> (column next to the names) — things a person covers all week, e.g. room preventive maintenance. No completion box. “⧉ last week” copies last week's into this week. <b>Daily joint tasks</b> (row under the dates) — lab meetings and similar; leave people unticked for everyone. Tick “Holiday” to mark everyone out of office (full or half day, single date or range). Both can be dragged to another person or day.<br><br>
   <b>Task list</b> — set priority, duration in half-days, and deadline. Drag a row onto the “Weekly calendar” tab, then drop it on a slot; multi-half-day tasks fill consecutive half-days, skipping weekends and time out of office. Recurring tasks are added to a week only when you click “↻ Add recurring tasks” in the calendar's To-schedule panel.<br><br>
   <b>Logging in & roles</b> — everyone logs in with their name and a personal 6-digit PIN (created the first time they log in). <b>Administrators</b> can do everything: assign, move and edit tasks, manage weekly/joint tasks and holidays, view the Summary tab, add or remove staff, change roles and reset PINs (Staff button). <b>Users</b> can tick tasks complete and add notes; they see the calendar and task list but can't change the schedule. 💬 shows how many notes a task has. You're logged out after ${IDLE_MIN} minutes without activity. Names, roles and PINs are stored sealed in the data file, so editing them by hand doesn't work — a changed record is locked until an administrator uses Reset in Staff. Keep at least two administrators, and if one is ever lost, restore the data file from the <b>backups</b> folder.<br><br>
