@@ -317,7 +317,10 @@
       }
       .cal {
         display: grid;
-        grid-template-columns: 140px 170px repeat(var(--days), minmax(140px, 1fr));
+        grid-template-columns: 140px 170px repeat(
+            var(--days),
+            minmax(140px, 1fr)
+          );
         background: var(--panel);
         border: 1px solid var(--line);
         border-radius: 8px;
@@ -504,7 +507,11 @@
         font-weight: 600;
       }
       .slot.ooo.hol {
-        background: repeating-linear-gradient(45deg, var(--hol) 0 6px, transparent 6px 12px);
+        background: repeating-linear-gradient(
+          45deg,
+          var(--hol) 0 6px,
+          transparent 6px 12px
+        );
       }
       .day.today {
         background: var(--today);
@@ -546,7 +553,11 @@
         opacity: 1;
       }
       .slot.ooo {
-        background: repeating-linear-gradient(45deg, var(--hatch) 0 6px, transparent 6px 12px);
+        background: repeating-linear-gradient(
+          45deg,
+          var(--hatch) 0 6px,
+          transparent 6px 12px
+        );
       }
       .ooolbl {
         font-size: 11px;
@@ -1309,7 +1320,11 @@
         position: relative;
         width: var(--tlw);
         flex: none;
-        background-image: linear-gradient(to right, var(--line) 1px, transparent 1px),
+        background-image: linear-gradient(
+            to right,
+            var(--line) 1px,
+            transparent 1px
+          ),
           linear-gradient(to right, var(--sep) 1px, transparent 1px);
         background-size:
           var(--dw) 100%,
@@ -1558,11 +1573,375 @@
         min-width: 0;
         width: 100%;
       }
+
+      /* ======================================================================
+         Washington State Department of Health theme
+         From the DOH graphics guidelines: official blue = PMS 286 (#0033A0),
+         optional accent orange = PMS 137 (#FFA300), Arial type.
+         ====================================================================== */
+      :root {
+        --doh-blue: #0033a0;
+        --doh-blue-dk: #00256f;
+        --doh-blue-lt: #e7edf8;
+        --doh-orange: #ffa300;
+        --doh-orange-dk: #9a5800;
+        --bg: #f2f4f8;
+        --panel: #ffffff;
+        --ink: #14213d;
+        --muted: #4b5870;
+        --line: #d2d9e5;
+        --accent: #0033a0;
+        --accent-soft: #e7edf8;
+        --danger: #b3261e;
+        --warn: #9a5800;
+        --ok: #1b7340;
+        --hatch: #e1e6ee;
+        --chip: #ffffff;
+        --today: #fff4d9;
+        --sep: #97a3ba;
+        --wk: #f7f9fc;
+        --jt: #edf2fb;
+        --hol: #fbe2df;
+        --hol-b: #b3261e;
+        --shadow: 0 1px 2px rgba(20, 33, 61, 0.08),
+          0 1px 1px rgba(20, 33, 61, 0.04);
+        --hdr: #0033a0;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0d1422;
+          --panel: #152036;
+          --ink: #e9eef7;
+          --muted: #aab5c9;
+          --line: #2b3854;
+          --accent: #86a8f2;
+          --accent-soft: #1f2d4d;
+          --danger: #f08378;
+          --warn: #f2b54a;
+          --ok: #58c98a;
+          --hatch: #24314c;
+          --chip: #1b2843;
+          --today: #2b2516;
+          --sep: #4c5c7c;
+          --wk: #172238;
+          --jt: #19253e;
+          --hol: #3d2421;
+          --hol-b: #f08378;
+          --shadow: none;
+          --hdr: #0a2257;
+          --doh-blue-lt: #1f2d4d;
+        }
+      }
+      body {
+        font:
+          15px/1.45 Arial,
+          "Helvetica Neue",
+          Helvetica,
+          sans-serif;
+      }
+      :focus-visible {
+        outline: 2px solid var(--doh-orange);
+        outline-offset: 2px;
+      }
+      /* header: DOH blue band with an orange rule */
+      /* two tiers: agency band (name + account) on top, tabs on a strip below */
+      header {
+        background: var(--hdr);
+        color: #fff;
+        border-bottom: 4px solid var(--doh-orange);
+        padding: 10px 20px 0;
+        gap: 10px 22px;
+        flex-wrap: wrap;
+      }
+      header .brand {
+        order: 1;
+      }
+      header .status {
+        order: 2;
+        margin-left: auto;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      header nav.tabs {
+        order: 3;
+        flex: none;
+        width: calc(100% + 40px);
+        gap: 2px;
+        margin: 0 -20px;
+        padding: 0 14px;
+        background: rgba(0, 0, 0, 0.16);
+      }
+      header nav.tabs button {
+        border-radius: 6px 6px 0 0;
+        margin-top: 6px;
+      }
+      .brand {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.15;
+      }
+      header h1 {
+        color: #fff;
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+      }
+      .brand-sub {
+        font-size: 11.5px;
+        color: rgba(255, 255, 255, 0.82);
+        margin-top: 3px;
+      }
+      nav.tabs button {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 15px;
+        font-weight: 700;
+        padding: 8px 14px;
+      }
+      nav.tabs button:hover {
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+      }
+      nav.tabs button.active {
+        background: #fff;
+        color: var(--doh-blue);
+      }
+      header .status {
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 13px;
+      }
+      header .link {
+        color: #fff;
+      }
+      header .link:hover {
+        text-decoration: underline;
+      }
+      header .rolechip {
+        background: rgba(255, 255, 255, 0.18);
+        color: #fff;
+      }
+      header .hbtn {
+        background: transparent;
+        color: #fff;
+        border-color: rgba(255, 255, 255, 0.55);
+      }
+      header .hbtn:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.14);
+        color: #fff;
+        border-color: #fff;
+      }
+      header .menu summary {
+        color: #fff;
+      }
+      header .menu > div {
+        color: var(--ink);
+      }
+      .dot.ok {
+        background: #6fe39e;
+      }
+      .dot.busy {
+        background: var(--doh-orange);
+      }
+      /* controls */
+      .btn {
+        border-color: var(--line);
+        font-weight: 600;
+      }
+      .btn:hover {
+        border-color: var(--doh-blue);
+        color: var(--doh-blue);
+      }
+      .btn.primary,
+      .btn.primary:hover {
+        background: var(--doh-blue);
+        border-color: var(--doh-blue);
+        color: #fff;
+      }
+      .btn.primary:hover {
+        background: var(--doh-blue-dk);
+      }
+      .hint {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      dialog h2,
+      .overlay h2 {
+        color: var(--doh-blue);
+      }
+      @media (prefers-color-scheme: dark) {
+        dialog h2,
+        .overlay h2 {
+          color: var(--accent);
+        }
+      }
+      .overlay .box {
+        border-top: 6px solid var(--doh-blue);
+      }
+      .overlay .box::after {
+        content: "";
+        display: block;
+        height: 3px;
+        background: var(--doh-orange);
+        margin: 18px -26px -26px;
+        border-radius: 0 0 12px 12px;
+      }
+      th {
+        background: var(--doh-blue-lt);
+        color: var(--doh-blue-dk);
+        text-transform: uppercase;
+        font-size: 11.5px;
+        letter-spacing: 0.4px;
+      }
+      @media (prefers-color-scheme: dark) {
+        th {
+          color: var(--accent);
+        }
+      }
+      h3 {
+        color: var(--doh-blue-dk);
+      }
+      @media (prefers-color-scheme: dark) {
+        h3 {
+          color: var(--accent);
+        }
+      }
+      /* calendar: day headers, each person's row tinted with their colour */
+      .cal {
+        border-color: var(--line);
+      }
+      .cal .h {
+        font-size: 14px;
+      }
+      .cal .h b {
+        color: var(--doh-blue);
+      }
+      @media (prefers-color-scheme: dark) {
+        .cal .h b {
+          color: var(--accent);
+        }
+      }
+      .cal .h.today {
+        background: var(--today);
+        box-shadow: inset 0 3px 0 var(--doh-orange);
+      }
+      .sname {
+        background: color-mix(in srgb, var(--rowc) 18%, var(--panel));
+        box-shadow: inset 5px 0 0 var(--rowc);
+        padding-left: 12px;
+        font-size: 15px;
+      }
+      .sname .sw {
+        display: none;
+      }
+      .wcell {
+        background: color-mix(in srgb, var(--rowc) 9%, var(--panel));
+      }
+      .day {
+        background: color-mix(in srgb, var(--rowc) 6%, var(--panel));
+      }
+      .day.today {
+        background-color: color-mix(in srgb, var(--rowc) 6%, var(--panel));
+        background-image: linear-gradient(
+          rgba(255, 163, 0, 0.09),
+          rgba(255, 163, 0, 0.09)
+        );
+      }
+      .dcell.today {
+        background-color: var(--jt);
+        background-image: linear-gradient(
+          rgba(255, 163, 0, 0.09),
+          rgba(255, 163, 0, 0.09)
+        );
+      }
+      .slot {
+        min-height: 52px;
+      }
+      .slot .lbl {
+        font-size: 10.5px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .ooolbl {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .jlabel {
+        color: var(--doh-blue);
+      }
+      @media (prefers-color-scheme: dark) {
+        .jlabel {
+          color: var(--accent);
+        }
+      }
+      /* task chips */
+      .chip {
+        font-size: 13px;
+        padding: 4px 6px;
+        gap: 5px;
+        border-color: var(--line);
+        border-left-width: 4px;
+      }
+      .chip input {
+        width: 15px;
+        height: 15px;
+      }
+      .chip.done .tt {
+        color: var(--muted);
+      }
+      .stask {
+        background: var(--chip);
+      }
+      .stask .tt {
+        font-size: 14px;
+      }
+      .stask .meta {
+        font-size: 12px;
+      }
+      aside#sidebar.over {
+        outline: 3px dashed var(--doh-orange);
+        outline-offset: -3px;
+      }
+      /* priority icons */
+      .pri-ic {
+        flex: none;
+        display: inline-block;
+        width: 13px;
+        text-align: center;
+        font-size: 11px;
+        line-height: 1;
+        font-weight: 700;
+        cursor: default;
+      }
+      .pri-hi {
+        color: #c8102e;
+      }
+      .pri-md {
+        color: #c76e00;
+      }
+      .pri-lo {
+        color: #2e7d32;
+      }
+      @media (prefers-color-scheme: dark) {
+        .pri-hi {
+          color: #ff7b86;
+        }
+        .pri-md {
+          color: #ffb84d;
+        }
+        .pri-lo {
+          color: #73d17a;
+        }
+      }
     </style>
   </head>
   <body>
     <header>
-      <h1>WAPHL AMD Team Planner</h1>
+      <div class="brand">
+        <h1>WAPHL AMD Team Planner</h1>
+        <span class="brand-sub"
+          >Washington State Department of Health · Public Health
+          Laboratories</span
+        >
+      </div>
       <nav class="tabs">
         <button data-tab="cal">Weekly calendar</button>
         <button data-tab="list">Task list</button>
@@ -1577,16 +1956,26 @@
           <span id="who"></span>
         </button>
         <button class="link" data-act="logout">Log out</button>
-        <button class="hbtn" data-act="undo" id="undoBtn" disabled>↶ Undo</button>
-        <button class="hbtn" data-act="redo" id="redoBtn" disabled>↷ Redo</button>
+        <button class="hbtn" data-act="undo" id="undoBtn" disabled>
+          ↶ Undo
+        </button>
+        <button class="hbtn" data-act="redo" id="redoBtn" disabled>
+          ↷ Redo
+        </button>
         <button class="link" data-act="sync">Sync now</button>
         <details class="menu">
           <summary title="More">⋯</summary>
           <div>
             <button data-act="help">How to use</button>
-            <button data-act="backup" class="admin-only">Download data (JSON)</button>
-            <button data-act="import" class="admin-only">Import / merge JSON…</button>
-            <button data-act="archive" class="admin-only">Archive old records now…</button>
+            <button data-act="backup" class="admin-only">
+              Download data (JSON)
+            </button>
+            <button data-act="import" class="admin-only">
+              Import / merge JSON…
+            </button>
+            <button data-act="archive" class="admin-only">
+              Archive old records now…
+            </button>
             <button data-act="reconnect">Switch data folder…</button>
           </div>
         </details>
@@ -1599,7 +1988,11 @@
           <button class="btn" data-act="prev" title="Previous week">◀</button>
           <button class="btn" data-act="today">This week</button>
           <button class="btn" data-act="next" title="Next week">▶</button>
-          <input type="date" id="jump" title="Jump to the week containing this date" />
+          <input
+            type="date"
+            id="jump"
+            title="Jump to the week containing this date"
+          />
           <strong id="weekLabel"></strong>
           <span class="grow"></span>
           <label class="chk">
@@ -1607,31 +2000,42 @@
             Weekends
           </label>
           <select id="calProj" title="Filter by project"></select>
-          <button class="admin-only btn" data-act="ooo">✈ Out of office</button>
+          <button class="admin-only btn" data-act="ooo">
+            ✈ Out of office
+          </button>
           <button class="admin-only btn" data-act="staff">Staff</button>
           <button class="admin-only btn" data-act="projects">Projects</button>
-          <button class="admin-only btn" data-act="sidebar">To-schedule panel</button>
-          <button class="admin-only btn" data-act="exportWeek">Export week</button>
+          <button class="btn" data-act="sidebar">To-schedule panel</button>
+          <button class="admin-only btn" data-act="exportWeek">
+            Export week
+          </button>
         </div>
         <div class="calwrap">
           <div id="calGrid"></div>
           <aside id="sidebar"></aside>
         </div>
         <p class="hint user-only">
-          Tick the box on a task to mark that half-day complete · Click a task to see details and add notes
-          (💬 shows how many notes it has).
+          Drag tasks from the To-schedule panel or between half-days · Tick the
+          box on a task to mark that half-day complete · Click a task to see
+          details and add notes (💬 shows how many notes it has).
         </p>
         <p class="hint admin-only">
-          Drag tasks between people and half-days · Double-click an empty half-day to mark someone out · “+”
-          adds a task (tick several people for a joint task) · Click a task for details · Weekly tasks (column
-          by the names) and daily joint tasks (row under the dates) need no completion.
+          Drag tasks between people and half-days · Double-click an empty
+          half-day to mark someone out · “+” adds a task (tick several people
+          for a joint task) · Click a task for details · Weekly tasks (column by
+          the names) and daily joint tasks (row under the dates) need no
+          completion.
         </p>
       </section>
 
       <section class="tab" id="tab-list" hidden>
         <div class="toolbar">
-          <button class="admin-only btn primary" data-act="newtask">+ New task</button>
-          <button class="admin-only btn" data-act="newrule">+ Recurring task</button>
+          <button class="admin-only btn primary" data-act="newtask">
+            + New task
+          </button>
+          <button class="admin-only btn" data-act="newrule">
+            + Recurring task
+          </button>
           <input id="q" type="search" placeholder="Search tasks…" />
           <select id="fProj"></select>
           <select id="fPri">
@@ -1655,11 +2059,14 @@
             <option value="title">Sort: title</option>
           </select>
           <span class="grow"></span>
-          <button class="admin-only btn" data-act="exportTasks">Export CSV</button>
+          <button class="admin-only btn" data-act="exportTasks">
+            Export CSV
+          </button>
         </div>
         <p class="hint">
-          Drag a row onto the “Weekly calendar” tab to switch to the calendar, then drop it on a person’s
-          half-day. Multi-half-day tasks fill consecutive half-days, skipping weekends and time out of office.
+          Drag a row onto the “Weekly calendar” tab to switch to the calendar,
+          then drop it on a person’s half-day. Multi-half-day tasks fill
+          consecutive half-days, skipping weekends and time out of office.
         </p>
         <div id="taskTable"></div>
         <h3>Validation project tasks</h3>
@@ -1674,8 +2081,8 @@
             <option value="all">All</option>
           </select>
           <span class="hint">
-            Deadline = the task's end on its Gantt chart. Drag a row onto the “Weekly calendar” tab, then onto
-            a half-day, to book hands-on work.
+            Deadline = the task's end on its Gantt chart. Drag a row onto the
+            “Weekly calendar” tab, then onto a half-day, to book hands-on work.
           </span>
         </div>
         <div id="gtTable"></div>
@@ -1717,9 +2124,13 @@
     </main>
 
     <dialog id="dlg"></dialog>
-    <div id="connect" class="overlay"><div class="box" id="connectBox"></div></div>
+    <div id="connect" class="overlay">
+      <div class="box" id="connectBox"></div>
+    </div>
     <div id="toast" hidden></div>
-    <div id="login" class="overlay" hidden><div class="box" id="loginBox"></div></div>
+    <div id="login" class="overlay" hidden>
+      <div class="box" id="loginBox"></div>
+    </div>
     <input type="file" id="importFile" accept=".json,application/json" hidden />
 
     <script>
@@ -1758,8 +2169,36 @@
         Low: { c: "#6b9c6b", r: 2 },
       };
       const pri = (p) => PRI[p] || PRI.Medium;
+      /* priority icon: shape AND colour differ, so it reads without colour too */
+      const PRI_IC = {
+        High: ["▲", "hi"],
+        Medium: ["◆", "md"],
+        Low: ["▼", "lo"],
+      };
+      const priIcon = (p) => {
+        const [g, c] = PRI_IC[p] || PRI_IC.Medium;
+        return `<span class="pri-ic pri-${c}" title="${esc(p || "Medium")} priority" aria-label="${esc(p || "Medium")} priority">${g}</span>`;
+      };
+      /* rank: priority first, then the soonest due date, then title */
+      const byPriority = (a, b) =>
+        pri(a.priority).r - pri(b.priority).r ||
+        (a.deadline || "9999").localeCompare(b.deadline || "9999") ||
+        a.title.localeCompare(b.title);
       const DAYN = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-      const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const MON = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
       const COLS = [
         "staff",
         "projects",
@@ -1781,7 +2220,14 @@
       const esc = (s) =>
         String(s ?? "").replace(
           /[&<>"']/g,
-          (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
         );
       const uid = () =>
         (window.crypto && crypto.randomUUID
@@ -1789,7 +2235,8 @@
           : Date.now().toString(36) + Math.random().toString(36).slice(2)
         ).slice(0, 16);
       const pad = (n) => String(n).padStart(2, "0");
-      const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      const ymd = (d) =>
+        `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
       const parse = (s) => {
         const [y, m, d] = s.split("-").map(Number);
         return new Date(y, m - 1, d);
@@ -1859,6 +2306,7 @@
       };
       let weekStart = mondayOf(today());
       let dragKind = "slot",
+        dragBack = false /* the dragged chip can go back to the To-schedule panel */,
         lastSig = "",
         saveTimer = null,
         saving = false,
@@ -1890,7 +2338,10 @@
         NIDX = null;
       }
       const staffList = () =>
-        live("staff").sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name));
+        live("staff").sort(
+          (a, b) =>
+            (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name),
+        );
       const staffName = (id) => {
         const s = get("staff", id);
         return s ? s.name + (s.deleted ? " (removed)" : "") : "?";
@@ -1916,7 +2367,8 @@
       }
       function put(c, rec) {
         const k = skey(c, rec.id);
-        if (!applying && !txn.has(k)) txn.set(k, { c, id: rec.id, before: shadow.get(k) ?? null });
+        if (!applying && !txn.has(k))
+          txn.set(k, { c, id: rec.id, before: shadow.get(k) ?? null });
         rec.updatedAt = Date.now();
         rec.updatedBy = me;
         const i = DB[c].findIndex((r) => r.id === rec.id);
@@ -1982,7 +2434,9 @@
       }
       const myUndo = () =>
         meId
-          ? DB.undo.filter((u) => !u.deleted && u.userId === meId && !u.undone).sort((a, b) => b.ts - a.ts)[0]
+          ? DB.undo
+              .filter((u) => !u.deleted && u.userId === meId && !u.undone)
+              .sort((a, b) => b.ts - a.ts)[0]
           : null;
       const myRedo = () =>
         meId
@@ -2005,11 +2459,18 @@
         }
         /* has anyone changed these items since? */
         const moved = u.changes.filter(
-          (ch, i) => (get(ch.c, ch.id)?.updatedAt ?? null) !== (u.stamps?.[i] ?? null),
+          (ch, i) =>
+            (get(ch.c, ch.id)?.updatedAt ?? null) !== (u.stamps?.[i] ?? null),
         );
         if (moved.length) {
-          const who = [...new Set(moved.map((ch) => get(ch.c, ch.id)?.updatedBy || "someone"))].join(", ");
-          const when = Math.max(...moved.map((ch) => get(ch.c, ch.id)?.updatedAt || 0));
+          const who = [
+            ...new Set(
+              moved.map((ch) => get(ch.c, ch.id)?.updatedBy || "someone"),
+            ),
+          ].join(", ");
+          const when = Math.max(
+            ...moved.map((ch) => get(ch.c, ch.id)?.updatedAt || 0),
+          );
           if (
             !confirm(
               `${verb} "${u.msg}"?\n\n${who} changed ${moved.length === 1 ? "this item" : moved.length + " of these items"} after you (latest ${fmtTs(when)}). ${verb === "Undo" ? "Undoing" : "Redoing"} will overwrite that later change.\n\n${verb} anyway?`,
@@ -2089,10 +2550,16 @@
         /* drop deletion markers once every PC has had time to see them */
         const tomb = Date.now() - TOMBSTONE_DAYS * 864e5;
         for (const c of COLS)
-          if (c !== "undo") out[c] = out[c].filter((r) => !(r.deleted && (r.updatedAt || 0) < tomb));
+          if (c !== "undo")
+            out[c] = out[c].filter(
+              (r) => !(r.deleted && (r.updatedAt || 0) < tomb),
+            );
         /* records already moved to an archive file never come back into the main file */
         out.meta = { ...(a.meta || {}), ...(b.meta || {}) };
-        const at = [a.meta?.archivedThrough, b.meta?.archivedThrough].filter(Boolean).sort().pop();
+        const at = [a.meta?.archivedThrough, b.meta?.archivedThrough]
+          .filter(Boolean)
+          .sort()
+          .pop();
         if (at) {
           out.meta.archivedThrough = at;
           const sel = archivable(out, at);
@@ -2106,17 +2573,33 @@
         const cutTs = parse(cut).getTime(),
           last = new Map();
         for (const b of db.blocks)
-          if (!b.deleted && (!last.has(b.taskId) || b.date > last.get(b.taskId))) last.set(b.taskId, b.date);
+          if (
+            !b.deleted &&
+            (!last.has(b.taskId) || b.date > last.get(b.taskId))
+          )
+            last.set(b.taskId, b.date);
         const tasks = new Set();
         for (const t of db.tasks)
-          if (!t.deleted && t.completedAt && (last.get(t.id) || ymd(new Date(t.completedAt))) < cut)
+          if (
+            !t.deleted &&
+            t.completedAt &&
+            (last.get(t.id) || ymd(new Date(t.completedAt))) < cut
+          )
             tasks.add(t.id);
         return {
           tasks,
-          blocks: new Set(db.blocks.filter((b) => tasks.has(b.taskId)).map((b) => b.id)),
-          notes: new Set(db.notes.filter((n) => tasks.has(n.taskId)).map((n) => n.id)),
-          absences: new Set(db.absences.filter((a) => a.to < cut).map((a) => a.id)),
-          weekly: new Set(db.weekly.filter((w) => w.weekStart < cut).map((w) => w.id)),
+          blocks: new Set(
+            db.blocks.filter((b) => tasks.has(b.taskId)).map((b) => b.id),
+          ),
+          notes: new Set(
+            db.notes.filter((n) => tasks.has(n.taskId)).map((n) => n.id),
+          ),
+          absences: new Set(
+            db.absences.filter((a) => a.to < cut).map((a) => a.id),
+          ),
+          weekly: new Set(
+            db.weekly.filter((w) => w.weekStart < cut).map((w) => w.id),
+          ),
           daily: new Set(db.daily.filter((x) => x.date < cut).map((x) => x.id)),
           log: new Set(db.log.filter((l) => l.ts < cutTs).map((l) => l.id)),
         };
@@ -2140,7 +2623,10 @@
         const t = get("tasks", tid);
         if (!t) return;
         const bs = blocksOf(tid);
-        const all = bs.length > 0 && bs.length >= Math.max(1, t.duration || 1) && bs.every((b) => b.done);
+        const all =
+          bs.length > 0 &&
+          bs.length >= Math.max(1, t.duration || 1) &&
+          bs.every((b) => b.done);
         if (all && !t.completedAt) {
           t.completedAt = Math.max(...bs.map((b) => b.doneAt || Date.now()));
           t.completedBy = me;
@@ -2154,19 +2640,37 @@
       }
       function holidayAt(date, slot) {
         return live("daily").find(
-          (x) => x.holiday && x.date === date && (!x.part || x.part === "ALL" || x.part === slot),
+          (x) =>
+            x.holiday &&
+            x.date === date &&
+            (!x.part || x.part === "ALL" || x.part === slot),
         );
       }
       function absenceAt(sid, date, slot) {
         const h = holidayAt(date, slot);
-        if (h) return { holiday: true, id: h.id, reason: h.title, part: h.part || "ALL" };
+        if (h)
+          return {
+            holiday: true,
+            id: h.id,
+            reason: h.title,
+            part: h.part || "ALL",
+          };
         const a = live("absences").find(
-          (a) => a.staffId === sid && a.from <= date && date <= a.to && (a.part === "ALL" || a.part === slot),
+          (a) =>
+            a.staffId === sid &&
+            a.from <= date &&
+            date <= a.to &&
+            (a.part === "ALL" || a.part === slot),
         );
         if (a) return a;
         const f = flexAt(sid, date, slot);
         return f
-          ? { flex: true, id: f.id, reason: (f.reason || "Flex day") + " ↻", part: f.part }
+          ? {
+              flex: true,
+              id: f.id,
+              reason: (f.reason || "Flex day") + " ↻",
+              part: f.part,
+            }
           : undefined;
       }
       /* ---------- recurring out-of-office (flex days) ----------
@@ -2178,14 +2682,19 @@
         if (!(f.weekdays || []).includes(wdIdx(date))) return false;
         if ((f.skips || []).includes(date)) return false;
         if (f.freq === "biweekly") {
-          const wk = Math.round((parse(mondayOf(date)) - parse(mondayOf(f.from))) / (7 * 864e5));
+          const wk = Math.round(
+            (parse(mondayOf(date)) - parse(mondayOf(f.from))) / (7 * 864e5),
+          );
           if (wk % 2 !== 0) return false;
         }
         return true;
       }
       const flexAt = (sid, date, slot) =>
         live("flex").find(
-          (f) => f.staffId === sid && (f.part === "ALL" || f.part === slot) && flexOn(f, date),
+          (f) =>
+            f.staffId === sid &&
+            (f.part === "ALL" || f.part === slot) &&
+            flexOn(f, date),
         );
       const flexText = (f) =>
         `${(f.weekdays || []).map((i) => DAYN[i]).join(", ")} ${f.freq === "biweekly" ? "every 2 weeks" : "every week"}${f.part !== "ALL" ? " (" + f.part + ")" : ""} from ${md(f.from)}${f.until ? " until " + md(f.until) : ""}`;
@@ -2202,7 +2711,10 @@
           first = true;
         const out = [];
         while (out.length < count && guard++ < 300) {
-          if ((first && forceFirst) || !staffIds.some((id) => absenceAt(id, d, s)))
+          if (
+            (first && forceFirst) ||
+            !staffIds.some((id) => absenceAt(id, d, s))
+          )
             out.push(
               put("blocks", {
                 id: uid(),
@@ -2227,7 +2739,8 @@
       function deleteTask(id) {
         const t = get("tasks", id);
         if (!t) return false;
-        if (!confirm(`Delete "${t.title}" and remove it from the calendar?`)) return false;
+        if (!confirm(`Delete "${t.title}" and remove it from the calendar?`))
+          return false;
         blocksOf(id).forEach((b) => del("blocks", b.id));
         del("tasks", id);
         commit(`Deleted task "${t.title}"`);
@@ -2242,7 +2755,13 @@
       function dueHTML(d, done) {
         if (!d) return '<span class="muted">—</span>';
         const td = today();
-        const cls = done ? "" : d < td ? "overdue" : d <= addDays(td, 3) ? "soon" : "";
+        const cls = done
+          ? ""
+          : d < td
+            ? "overdue"
+            : d <= addDays(td, 3)
+              ? "soon"
+              : "";
         return `<span class="${cls}">${md(d)}${d.slice(0, 4) !== td.slice(0, 4) ? " " + d.slice(0, 4) : ""}</span>`;
       }
       function avatars(ids) {
@@ -2264,18 +2783,33 @@
         return d;
       }
       function occurs(r, d) {
-        if (wdIdx(d) !== +r.weekday || d < r.startDate || (r.endDate && d > r.endDate)) return false;
+        if (
+          wdIdx(d) !== +r.weekday ||
+          d < r.startDate ||
+          (r.endDate && d > r.endDate)
+        )
+          return false;
         const f = firstOcc(r);
         if (d < f) return false;
         if (r.freq === "weekly") return true;
-        if (r.freq === "biweekly") return Math.round((parse(d) - parse(f)) / 864e5) % 14 === 0;
+        if (r.freq === "biweekly")
+          return Math.round((parse(d) - parse(f)) / 864e5) % 14 === 0;
         if (r.freq === "monthly")
-          return Math.ceil(parse(d).getDate() / 7) === Math.ceil(parse(f).getDate() / 7);
+          return (
+            Math.ceil(parse(d).getDate() / 7) ===
+            Math.ceil(parse(f).getDate() / 7)
+          );
         return false;
       }
-      const FREQ = { weekly: "Weekly", biweekly: "Every 2 weeks", monthly: "Monthly" };
+      const FREQ = {
+        weekly: "Weekly",
+        biweekly: "Every 2 weeks",
+        monthly: "Monthly",
+      };
       function ruleText(r) {
-        const nth = ["1st", "2nd", "3rd", "4th", "5th"][Math.ceil(parse(firstOcc(r)).getDate() / 7) - 1];
+        const nth = ["1st", "2nd", "3rd", "4th", "5th"][
+          Math.ceil(parse(firstOcc(r)).getDate() / 7) - 1
+        ];
         return r.freq === "monthly"
           ? `${nth} ${DAYN[r.weekday]} of each month, ${r.slot}`
           : `${FREQ[r.freq]} on ${DAYN[r.weekday]} ${r.slot}`;
@@ -2444,7 +2978,8 @@
       }
       function toFileJSON(db, head) {
         const L = ["{"];
-        for (const [k, v] of Object.entries(head)) L.push(`  ${JSON.stringify(k)}: ${JSON.stringify(v)},`);
+        for (const [k, v] of Object.entries(head))
+          L.push(`  ${JSON.stringify(k)}: ${JSON.stringify(v)},`);
         const secs = [...COLS, "log"].filter((c) => db[c]);
         secs.forEach((c, i) => {
           const arr = db[c],
@@ -2455,7 +2990,11 @@
           }
           L.push(`  ${JSON.stringify(c)}: [`);
           arr.forEach((r, j) =>
-            L.push("    " + JSON.stringify(orderKeys(r)) + (j < arr.length - 1 ? "," : "")),
+            L.push(
+              "    " +
+                JSON.stringify(orderKeys(r)) +
+                (j < arr.length - 1 ? "," : ""),
+            ),
           );
           L.push("  ]" + end);
         });
@@ -2483,7 +3022,8 @@
               sig: f.lastModified + ":" + f.size,
             };
           } catch (e) {
-            if (i === 3) throw new Error("Data file is unreadable: " + e.message);
+            if (i === 3)
+              throw new Error("Data file is unreadable: " + e.message);
             await sleep(400);
           }
         }
@@ -2500,7 +3040,9 @@
         const d = today();
         if (backedUp === d) return;
         try {
-          const bd = await dirHandle.getDirectoryHandle("backups", { create: true });
+          const bd = await dirHandle.getDirectoryHandle("backups", {
+            create: true,
+          });
           const name = `team-planner-${d}.json`;
           try {
             await bd.getFileHandle(name);
@@ -2538,7 +3080,11 @@
             localStorage.setItem(LS_DATA, JSON.stringify(sealDB(DB)));
           }
           pendingSave = false;
-          setStatus("ok", (mode === "folder" ? "Saved " : "Saved locally ") + fmtTs(Date.now()).slice(11));
+          setStatus(
+            "ok",
+            (mode === "folder" ? "Saved " : "Saved locally ") +
+              fmtTs(Date.now()).slice(11),
+          );
           if (dragging || modalOpen) deferred = true;
           else render();
         } catch (e) {
@@ -2562,7 +3108,8 @@
             DB = mergeDB(data, DB);
             rebuildShadow();
             lastSig = sig;
-            if (!pendingSave) setStatus("ok", "Synced " + fmtTs(Date.now()).slice(11));
+            if (!pendingSave)
+              setStatus("ok", "Synced " + fmtTs(Date.now()).slice(11));
             if (dragging || modalOpen) deferred = true;
             else render();
           }
@@ -2587,7 +3134,9 @@
       async function readArchive(y) {
         if (mode === "folder") {
           try {
-            const f = await (await dirHandle.getFileHandle(archiveName(y))).getFile();
+            const f = await (
+              await dirHandle.getFileHandle(archiveName(y))
+            ).getFile();
             return JSON.parse(await f.text());
           } catch {
             return null;
@@ -2608,7 +3157,9 @@
           savedAt: new Date().toISOString(),
         });
         if (mode === "folder") {
-          const fh = await dirHandle.getFileHandle(archiveName(y), { create: true });
+          const fh = await dirHandle.getFileHandle(archiveName(y), {
+            create: true,
+          });
           const w = await fh.createWritable();
           await w.write(txt);
           await w.close();
@@ -2628,7 +3179,15 @@
           }
         return ys.sort();
       }
-      const ARCH_COLS = ["tasks", "blocks", "notes", "absences", "weekly", "daily", "log"];
+      const ARCH_COLS = [
+        "tasks",
+        "blocks",
+        "notes",
+        "absences",
+        "weekly",
+        "daily",
+        "log",
+      ];
       let archiving = false,
         archiveChecked = "";
       async function runArchive(manual) {
@@ -2660,7 +3219,8 @@
           for (const b of DB.blocks)
             if (sel.blocks.has(b.id)) {
               const y = b.date.slice(0, 4);
-              if (!taskYear.has(b.taskId) || y > taskYear.get(b.taskId)) taskYear.set(b.taskId, y);
+              if (!taskYear.has(b.taskId) || y > taskYear.get(b.taskId))
+                taskYear.set(b.taskId, y);
             }
           for (const t of DB.tasks)
             if (sel.tasks.has(t.id) && !taskYear.has(t.id))
@@ -2688,7 +3248,8 @@
             };
             for (const col of ARCH_COLS) {
               const m = new Map();
-              for (const r of [...(old[col] || []), ...(cols[col] || [])]) m.set(r.id, r);
+              for (const r of [...(old[col] || []), ...(cols[col] || [])])
+                m.set(r.id, r);
               out[col] = [...m.values()];
             }
             await writeArchive(y, out);
@@ -2696,7 +3257,10 @@
           }
           DB.meta = {
             ...(DB.meta || {}),
-            archivedThrough: [DB.meta?.archivedThrough, cut].filter(Boolean).sort().pop(),
+            archivedThrough: [DB.meta?.archivedThrough, cut]
+              .filter(Boolean)
+              .sort()
+              .pop(),
           };
           DB = mergeDB(DB, emptyDB());
           rebuildShadow();
@@ -2740,17 +3304,22 @@
         if (supported)
           $("#cPick").onclick = async () => {
             try {
-              const h = await showDirectoryPicker({ id: "team-planner", mode: "readwrite" });
+              const h = await showDirectoryPicker({
+                id: "team-planner",
+                mode: "readwrite",
+              });
               await connectFolder(h);
             } catch (e) {
-              if (e.name !== "AbortError") alert("Could not open folder: " + e.message);
+              if (e.name !== "AbortError")
+                alert("Could not open folder: " + e.message);
             }
           };
         $("#cLocal").onclick = () => {
           mode = "local";
           try {
             DB = mergeDB(
-              unsealDB(JSON.parse(localStorage.getItem(LS_DATA) || "null")) || emptyDB(),
+              unsealDB(JSON.parse(localStorage.getItem(LS_DATA) || "null")) ||
+                emptyDB(),
               emptyDB(),
             );
           } catch {
@@ -2764,7 +3333,8 @@
       async function connectFolder(h) {
         try {
           let p = await h.queryPermission({ mode: "readwrite" });
-          if (p !== "granted") p = await h.requestPermission({ mode: "readwrite" });
+          if (p !== "granted")
+            p = await h.requestPermission({ mode: "readwrite" });
           if (p !== "granted") {
             alert("Edit permission is needed to use the shared folder.");
             return;
@@ -2814,12 +3384,16 @@
           bits = b.length * 8;
         b.push(0x80);
         while (b.length % 64 !== 56) b.push(0);
-        for (let i = 7; i >= 0; i--) b.push(i >= 4 ? 0 : (bits >>> (i * 8)) & 255);
+        for (let i = 7; i >= 0; i--)
+          b.push(i >= 4 ? 0 : (bits >>> (i * 8)) & 255);
         for (let j = 0; j < b.length; j += 64) {
           const w = [];
           for (let i = 0; i < 16; i++)
             w[i] =
-              (b[j + 4 * i] << 24) | (b[j + 4 * i + 1] << 16) | (b[j + 4 * i + 2] << 8) | b[j + 4 * i + 3];
+              (b[j + 4 * i] << 24) |
+              (b[j + 4 * i + 1] << 16) |
+              (b[j + 4 * i + 2] << 8) |
+              b[j + 4 * i + 3];
           for (let i = 16; i < 64; i++) {
             const x = w[i - 15],
               y = w[i - 2];
@@ -2832,8 +3406,17 @@
           }
           let [a, bb, c, d, e, f, g, h] = H;
           for (let i = 0; i < 64; i++) {
-            const t1 = (h + (rot(e, 6) ^ rot(e, 11) ^ rot(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + w[i]) | 0,
-              t2 = ((rot(a, 2) ^ rot(a, 13) ^ rot(a, 22)) + ((a & bb) ^ (a & c) ^ (bb & c))) | 0;
+            const t1 =
+                (h +
+                  (rot(e, 6) ^ rot(e, 11) ^ rot(e, 25)) +
+                  ((e & f) ^ (~e & g)) +
+                  K[i] +
+                  w[i]) |
+                0,
+              t2 =
+                ((rot(a, 2) ^ rot(a, 13) ^ rot(a, 22)) +
+                  ((a & bb) ^ (a & c) ^ (bb & c))) |
+                0;
             h = g;
             g = f;
             f = e;
@@ -2857,8 +3440,10 @@
          Notepad); it is not protection against someone able to read this program's code. */
       const SEAL_KEY = "c7f3a9e14b2d58f0a6e1d4c39b7f2e85";
       const SEALED = ["name", "role", "pinSalt", "pinHash", "sealBroken"];
-      const hexToBytes = (h) => Uint8Array.from((h.match(/../g) || []).map((x) => parseInt(x, 16)));
-      const bytesToHex = (b) => [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
+      const hexToBytes = (h) =>
+        Uint8Array.from((h.match(/../g) || []).map((x) => parseInt(x, 16)));
+      const bytesToHex = (b) =>
+        [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
       const sealCache = new Map(),
         unsealCache = new Map();
       function sealStream(key, nonce, n) {
@@ -2869,7 +3454,8 @@
         }
         return out;
       }
-      const sealMac = (key, nonce, ct) => sha256(key + ":mac:" + sha256(key + ":in:" + nonce + ":" + ct));
+      const sealMac = (key, nonce, ct) =>
+        sha256(key + ":mac:" + sha256(key + ":in:" + nonce + ":" + ct));
       function seal(id, payload) {
         const json = JSON.stringify({ id, ...payload }),
           ck = id + "|" + json;
@@ -2893,7 +3479,9 @@
           if (v === "v1" && sealMac(key, nonce, ct) === mac) {
             const b = hexToBytes(ct),
               ks = sealStream(key, nonce, b.length);
-            const o = JSON.parse(new TextDecoder().decode(b.map((x, i) => x ^ ks[i])));
+            const o = JSON.parse(
+              new TextDecoder().decode(b.map((x, i) => x ^ ks[i])),
+            );
             if (o.id === id) res = o;
           }
         } catch {}
@@ -2904,7 +3492,8 @@
         const o = {},
           p = {};
         for (const k of Object.keys(r)) if (!SEALED.includes(k)) o[k] = r[k];
-        for (const k of SEALED) if (r[k] != null && r[k] !== "" && r[k] !== false) p[k] = r[k];
+        for (const k of SEALED)
+          if (r[k] != null && r[k] !== "" && r[k] !== false) p[k] = r[k];
         o.sec = seal(r.id, p);
         return o;
       }
@@ -2946,7 +3535,12 @@
             for (const k of SEALED) delete r[k];
             if (p) {
               for (const k of SEALED) if (p[k] != null) r[k] = p[k];
-            } else Object.assign(r, { name: "Damaged record", role: "user", sealBroken: true });
+            } else
+              Object.assign(r, {
+                name: "Damaged record",
+                role: "user",
+                sealBroken: true,
+              });
             return true;
           }
           if (sealedFile) {
@@ -2967,7 +3561,8 @@
                 for (const side of ["before", "after"])
                   if (ch[side]) {
                     const had = !!ch[side].sec;
-                    if (!open(ch[side]) || (had && ch[side].sealBroken)) good = false;
+                    if (!open(ch[side]) || (had && ch[side].sealBroken))
+                      good = false;
                   }
             if (!good) {
               u.deleted = true;
@@ -2988,7 +3583,11 @@
       function pinProblem(p1, p2) {
         if (!/^\d{6}$/.test(p1)) return "The PIN must be exactly 6 digits.";
         if (p2 !== undefined && p1 !== p2) return "The two PINs don't match.";
-        if (/^(\d)\1{5}$/.test(p1) || "01234567890".includes(p1) || "09876543210".includes(p1))
+        if (
+          /^(\d)\1{5}$/.test(p1) ||
+          "01234567890".includes(p1) ||
+          "09876543210".includes(p1)
+        )
           return "That PIN is too easy to guess — avoid repeated or sequential digits.";
         return "";
       }
@@ -3060,7 +3659,13 @@
             const pr = pinProblem(f.pin.value, f.pin2.value);
             if (pr) return err(pr);
             me = n;
-            const r = put("staff", { id: uid(), name: n, color: PALETTE[0], order: 0, role: "admin" });
+            const r = put("staff", {
+              id: uid(),
+              name: n,
+              color: PALETTE[0],
+              order: 0,
+              role: "admin",
+            });
             setPin(r, f.pin.value);
             put("staff", r);
             log(`${n} set up the planner as administrator`, false);
@@ -3129,7 +3734,9 @@
             if (fails[r.id] >= 5) {
               fails[r.id] = 0;
               lockedUntil[r.id] = Date.now() + 30000;
-              return err("Incorrect PIN 5 times. Wait 30 seconds, then try again.");
+              return err(
+                "Incorrect PIN 5 times. Wait 30 seconds, then try again.",
+              );
             }
             return err("Incorrect PIN.");
           }
@@ -3184,12 +3791,18 @@
       );
       setInterval(() => {
         if (meId && Date.now() - lastAct > IDLE_MIN * 60000)
-          logout(`You were logged out after ${IDLE_MIN} minutes without activity.`);
+          logout(
+            `You were logged out after ${IDLE_MIN} minutes without activity.`,
+          );
       }, 30000);
 
       /* ---------- modal ---------- */
       const val = (d, n) => d.querySelector(`[name="${n}"]`).value;
-      function modal(title, body, { ok = "Save", onOk, extra = [], wide = false, onMount } = {}) {
+      function modal(
+        title,
+        body,
+        { ok = "Save", onOk, extra = [], wide = false, onMount } = {},
+      ) {
         const d = $("#dlg");
         d.className = wide ? "wide" : "";
         d.innerHTML = `<form><h2>${esc(title)}</h2><div class="mbody">${body}</div><div class="mfoot">${extra.map((x, i) => `<button type="button" class="btn ${x.cls || ""}" data-x="${i}">${esc(x.label)}</button>`).join("")}<span style="flex:1"></span><button type="button" class="btn" data-x="cancel">${onOk ? "Cancel" : "Close"}</button>${onOk ? `<button type="submit" class="btn primary">${esc(ok)}</button>` : ""}</div></form>`;
@@ -3213,12 +3826,19 @@
             }),
         );
         onMount && onMount(d);
-        const f = d.querySelector("input:not([type=checkbox]):not([type=color]),select");
+        const f = d.querySelector(
+          "input:not([type=checkbox]):not([type=color]),select",
+        );
         f && f.focus();
       }
       function projSelect(sel, name = "projectId") {
-        return `<select name="${name}"><option value="">No project</option>${live("projects")
-          .map((p) => `<option value="${p.id}" ${p.id === sel ? "selected" : ""}>${esc(p.name)}</option>`)
+        return `<select name="${name}"><option value="">No project</option>${live(
+          "projects",
+        )
+          .map(
+            (p) =>
+              `<option value="${p.id}" ${p.id === sel ? "selected" : ""}>${esc(p.name)}</option>`,
+          )
           .join("")}</select>`;
       }
       function priSelect(sel) {
@@ -3226,10 +3846,12 @@
       }
       function staffPicker(sel, legend = "Staff") {
         const s = staffList();
-        if (!s.length) return '<p class="overdue">Add staff first (Weekly calendar → Staff).</p>';
+        if (!s.length)
+          return '<p class="overdue">Add staff first (Weekly calendar → Staff).</p>';
         return `<fieldset class="staffpick"><legend>${legend} · <button type="button" class="link" onclick="this.closest('fieldset').querySelectorAll('input').forEach(i=>i.checked=true)">all</button> / <button type="button" class="link" onclick="this.closest('fieldset').querySelectorAll('input').forEach(i=>i.checked=false)">none</button></legend>${s.map((x) => `<label class="chk"><input type="checkbox" name="staffIds" value="${x.id}" ${sel.includes(x.id) ? "checked" : ""}><span class="sw" style="background:${x.color}"></span>${esc(x.name)}</label>`).join("")}</fieldset>`;
       }
-      const picked = (d) => $$("[name=staffIds]:checked", d).map((i) => i.value);
+      const picked = (d) =>
+        $$("[name=staffIds]:checked", d).map((i) => i.value);
 
       /* ---------- notes (anyone can add; author or admin can delete) ---------- */
       function notesOf(tid) {
@@ -3262,8 +3884,17 @@
         const ta = d.querySelector("[name=newnote]");
         const txt = ta && ta.value.trim();
         if (!txt) return false;
-        put("notes", { id: uid(), taskId: tid, text: txt, by: me, byId: meId, ts: Date.now() });
-        log(`Added a note to "${(get("tasks", tid) || get("gtasks", tid))?.title}"`);
+        put("notes", {
+          id: uid(),
+          taskId: tid,
+          text: txt,
+          by: me,
+          byId: meId,
+          ts: Date.now(),
+        });
+        log(
+          `Added a note to "${(get("tasks", tid) || get("gtasks", tid))?.title}"`,
+        );
         scheduleSave();
         ta.value = "";
         const th = d.querySelector(".nthread");
@@ -3282,7 +3913,9 @@
             const n = get("notes", x.dataset.delnote);
             if (!n || !confirm("Delete this note?")) return;
             del("notes", n.id);
-            log(`Deleted a note on "${(get("tasks", n.taskId) || get("gtasks", n.taskId))?.title}"`);
+            log(
+              `Deleted a note on "${(get("tasks", n.taskId) || get("gtasks", n.taskId))?.title}"`,
+            );
             scheduleSave();
             d.querySelector(".nthread").innerHTML = notesList(n.taskId);
           }
@@ -3314,7 +3947,11 @@
               duration: 1,
               deadline: "",
             };
-        const bs = id ? blocksOf(id).sort((a, b) => (a.date + a.slot).localeCompare(b.date + b.slot)) : [];
+        const bs = id
+          ? blocksOf(id).sort((a, b) =>
+              (a.date + a.slot).localeCompare(b.date + b.slot),
+            )
+          : [];
         if (!isAdmin()) {
           if (!id) return;
           modal(
@@ -3357,7 +3994,9 @@
               if (id) addNote(d, id);
               const title = val(d, "title").trim();
               if (!title) return false;
-              const rec = id ? get("tasks", id) : { id: uid(), createdAt: Date.now(), completedAt: null };
+              const rec = id
+                ? get("tasks", id)
+                : { id: uid(), createdAt: Date.now(), completedAt: null };
               Object.assign(rec, {
                 title,
                 projectId: val(d, "projectId"),
@@ -3373,7 +4012,9 @@
               put("tasks", rec);
               commit(`${id ? "Edited" : "Created"} task "${title}"`);
             },
-            extra: id ? [{ label: "Delete", cls: "danger", fn: () => deleteTask(id) }] : [],
+            extra: id
+              ? [{ label: "Delete", cls: "danger", fn: () => deleteTask(id) }]
+              : [],
           },
         );
       }
@@ -3388,7 +4029,8 @@
           put("blocks", b);
         });
         if (t.gtaskId) syncGtProgress(t.gtaskId);
-        if (!noCommit) commit(`${done ? "Completed" : "Reopened"} "${t.title}"`);
+        if (!noCommit)
+          commit(`${done ? "Completed" : "Reopened"} "${t.title}"`);
       }
       function quickModal(staff, date, slot) {
         const open = live("tasks")
@@ -3406,7 +4048,8 @@
             ok: "Add",
             onMount: (d) => {
               const s = d.querySelector("[name=existing]");
-              s.onchange = () => (d.querySelector(".newonly").hidden = !!s.value);
+              s.onchange = () =>
+                (d.querySelector(".newonly").hidden = !!s.value);
             },
             onOk: (d) => {
               const ids = picked(d);
@@ -3467,7 +4110,9 @@
                   b.doneBy = done ? me : null;
                   put("blocks", b);
                   syncTaskDone(t.id);
-                  commit(`${done ? "Completed" : "Un-completed"} "${t.title}" (${b.date} ${b.slot})`);
+                  commit(
+                    `${done ? "Completed" : "Un-completed"} "${t.title}" (${b.date} ${b.slot})`,
+                  );
                 } else commit();
               },
             },
@@ -3487,11 +4132,17 @@
               addNote(d, t.id);
               const ids = picked(d);
               if (!ids.length) {
-                alert("Pick at least one person, or use “Remove from calendar”.");
+                alert(
+                  "Pick at least one person, or use “Remove from calendar”.",
+                );
                 return false;
               }
               const done = d.querySelector("[name=done]").checked;
-              Object.assign(b, { date: val(d, "date") || b.date, slot: val(d, "slot"), staffIds: ids });
+              Object.assign(b, {
+                date: val(d, "date") || b.date,
+                slot: val(d, "slot"),
+                staffIds: ids,
+              });
               if (done !== !!b.done) {
                 b.done = done;
                 b.doneAt = done ? Date.now() : null;
@@ -3499,7 +4150,9 @@
               }
               put("blocks", b);
               syncTaskDone(t.id);
-              commit(`Updated "${t.title}" on ${b.date} ${b.slot} (${ids.map(staffName).join(", ")})`);
+              commit(
+                `Updated "${t.title}" on ${b.date} ${b.slot} (${ids.map(staffName).join(", ")})`,
+              );
             },
             extra: [
               {
@@ -3534,7 +4187,7 @@
         modal(
           "Staff & access",
           `<div id="srows">${rows()}</div><div class="row" style="margin-top:10px"><input name="newname" placeholder="New staff name"><select name="newrole" style="flex:none"><option value="user">User</option><option value="admin">Administrator</option></select><button type="button" class="btn" id="addS" style="flex:none">Add</button></div>
-  <p class="hint"><b>Administrators</b> can do everything, including the Summary tab and managing staff. <b>Users</b> can tick tasks complete and add notes. New people create their own PIN the first time they log in; “Reset PIN” lets someone who forgot theirs choose a new one. Removing someone keeps their past work in the summary and moves their unfinished future half-days back to “To schedule”.</p>`,
+  <p class="hint"><b>Administrators</b> can do everything, including the Summary tab and managing staff. <b>Users</b> can tick tasks complete, add notes, and schedule or move tasks on the calendar (To-schedule panel included). New people create their own PIN the first time they log in; “Reset PIN” lets someone who forgot theirs choose a new one. Removing someone keeps their past work in the summary and moves their unfinished future half-days back to “To schedule”.</p>`,
           {
             ok: "Done",
             wide: true,
@@ -3545,7 +4198,11 @@
               const add = () => {
                 const n = nn.value.trim();
                 if (!n) return;
-                if (staffList().some((s) => s.name.toLowerCase() === n.toLowerCase())) {
+                if (
+                  staffList().some(
+                    (s) => s.name.toLowerCase() === n.toLowerCase(),
+                  )
+                ) {
                   alert(`${n} is already on the list.`);
                   return;
                 }
@@ -3556,7 +4213,9 @@
                   name: n,
                   role,
                   color: PALETTE[DB.staff.length % PALETTE.length],
-                  order: all.length ? Math.max(...all.map((s) => s.order ?? 0)) + 1 : 0,
+                  order: all.length
+                    ? Math.max(...all.map((s) => s.order ?? 0)) + 1
+                    : 0,
                 });
                 log(`Added ${n} as ${roleName(role)}`);
                 scheduleSave();
@@ -3589,7 +4248,9 @@
                   if (
                     s.id === meId &&
                     nr !== "admin" &&
-                    !confirm("Remove your own administrator access? You will become a regular user.")
+                    !confirm(
+                      "Remove your own administrator access? You will become a regular user.",
+                    )
                   ) {
                     e.target.value = "admin";
                     return;
@@ -3603,7 +4264,8 @@
                 if (!e.target.dataset.f) return;
                 const s = get("staff", r.dataset.id);
                 const old = s.name;
-                s[e.target.dataset.f] = e.target.value.trim() || s[e.target.dataset.f];
+                s[e.target.dataset.f] =
+                  e.target.value.trim() || s[e.target.dataset.f];
                 put("staff", s);
                 log(
                   e.target.dataset.f === "name"
@@ -3631,7 +4293,11 @@
                 }
                 if (e.target.dataset.reset) {
                   const s = get("staff", id);
-                  if (!confirm(`Reset ${s.name}'s PIN? They'll create a new one the next time they log in.`))
+                  if (
+                    !confirm(
+                      `Reset ${s.name}'s PIN? They'll create a new one the next time they log in.`,
+                    )
+                  )
                     return;
                   delete s.sealBroken;
                   s.pinHash = "";
@@ -3644,7 +4310,10 @@
                 if (e.target.dataset.rm) {
                   const s = get("staff", id);
                   if (s.id === meId) return;
-                  if (s.role === "admin" && staffList().filter((x) => x.role === "admin").length <= 1) {
+                  if (
+                    s.role === "admin" &&
+                    staffList().filter((x) => x.role === "admin").length <= 1
+                  ) {
                     alert("There must be at least one administrator.");
                     return;
                   }
@@ -3656,7 +4325,9 @@
                     return;
                   const td = today();
                   live("blocks")
-                    .filter((b) => b.staffIds.includes(id) && !b.done && b.date >= td)
+                    .filter(
+                      (b) => b.staffIds.includes(id) && !b.done && b.date >= td,
+                    )
                     .forEach((b) => {
                       b.staffIds = b.staffIds.filter((x) => x !== id);
                       if (b.staffIds.length) put("blocks", b);
@@ -3714,7 +4385,8 @@
                 const r = e.target.closest(".srow");
                 if (!r || !e.target.dataset.f) return;
                 const p = get("projects", r.dataset.id);
-                p[e.target.dataset.f] = e.target.value.trim() || p[e.target.dataset.f];
+                p[e.target.dataset.f] =
+                  e.target.value.trim() || p[e.target.dataset.f];
                 put("projects", p);
                 log(`Edited project ${p.name}`);
                 scheduleSave();
@@ -3723,7 +4395,8 @@
                 const r = e.target.closest(".srow");
                 if (!r || !e.target.dataset.rm) return;
                 const p = get("projects", r.dataset.id);
-                if (!confirm(`Remove project "${p.name}"? Its tasks are kept.`)) return;
+                if (!confirm(`Remove project "${p.name}"? Its tasks are kept.`))
+                  return;
                 del("projects", p.id);
                 log(`Removed project ${p.name}`);
                 scheduleSave();
@@ -3744,7 +4417,9 @@
             .sort((x, y) => x.from.localeCompare(y.from));
           const f = live("flex")
             .filter((x) => !x.until || x.until >= today())
-            .sort((x, y) => staffName(x.staffId).localeCompare(staffName(y.staffId)));
+            .sort((x, y) =>
+              staffName(x.staffId).localeCompare(staffName(y.staffId)),
+            );
           const rows =
             f
               .map(
@@ -3771,7 +4446,10 @@
         modal(
           "Out of office",
           `<label>Staff<select name="staff">${staffList()
-            .map((s) => `<option value="${s.id}" ${s.id === staff ? "selected" : ""}>${esc(s.name)}</option>`)
+            .map(
+              (s) =>
+                `<option value="${s.id}" ${s.id === staff ? "selected" : ""}>${esc(s.name)}</option>`,
+            )
             .join("")}</select></label>
   <div class="row" style="margin-bottom:10px"><label class="chk"><input type="radio" name="kind" value="once" ${recurring ? "" : "checked"}> One-off dates</label><label class="chk"><input type="radio" name="kind" value="repeat" ${recurring ? "checked" : ""}> Repeats (flex day, compressed schedule)</label></div>
   <div class="once"><div class="row"><label>From<input type="date" name="from" value="${d0}"></label><label>To<input type="date" name="to" value="${d0}"></label></div></div>
@@ -3793,11 +4471,14 @@
             ok: "Add",
             onMount: (d) => {
               const sync = () => {
-                const rep = d.querySelector("[name=kind]:checked").value === "repeat";
+                const rep =
+                  d.querySelector("[name=kind]:checked").value === "repeat";
                 d.querySelector(".once").hidden = rep;
                 d.querySelector(".repeat").hidden = !rep;
                 const r = d.querySelector("[name=reason]");
-                r.placeholder = rep ? "Flex day" : "Vacation, training, conference…";
+                r.placeholder = rep
+                  ? "Flex day"
+                  : "Vacation, training, conference…";
               };
               $$("[name=kind]", d).forEach((x) => (x.onchange = sync));
               sync();
@@ -3805,10 +4486,16 @@
                 const fx = e.target.dataset.rmfx;
                 if (fx) {
                   const f = get("flex", fx);
-                  if (!confirm(`Stop ${staffName(f.staffId)}'s repeating out-of-office (${flexText(f)})?`))
+                  if (
+                    !confirm(
+                      `Stop ${staffName(f.staffId)}'s repeating out-of-office (${flexText(f)})?`,
+                    )
+                  )
                     return;
                   del("flex", fx);
-                  log(`Removed recurring out-of-office for ${staffName(f.staffId)} (${flexText(f)})`);
+                  log(
+                    `Removed recurring out-of-office for ${staffName(f.staffId)} (${flexText(f)})`,
+                  );
                   scheduleSave();
                   d.querySelector("#abList").innerHTML = abList();
                   return;
@@ -3817,7 +4504,9 @@
                 if (!id) return;
                 const a = get("absences", id);
                 del("absences", id);
-                log(`Removed out-of-office for ${staffName(a.staffId)} (${a.from}–${a.to})`);
+                log(
+                  `Removed out-of-office for ${staffName(a.staffId)} (${a.from}–${a.to})`,
+                );
                 scheduleSave();
                 d.querySelector("#abList").innerHTML = abList();
               };
@@ -3827,7 +4516,9 @@
                 part = val(d, "part"),
                 reason = val(d, "reason").trim();
               if (d.querySelector("[name=kind]:checked").value === "repeat") {
-                const weekdays = $$("[name=wd]:checked", d).map((x) => +x.value);
+                const weekdays = $$("[name=wd]:checked", d).map(
+                  (x) => +x.value,
+                );
                 const from = val(d, "rfrom"),
                   until = val(d, "until");
                 if (!weekdays.length) {
@@ -3853,7 +4544,9 @@
                   reason: reason || "Flex day",
                   skips: [],
                 });
-                commit(`${staffName(sid)} out of office ${flexText(f)}${reason ? " (" + reason + ")" : ""}`);
+                commit(
+                  `${staffName(sid)} out of office ${flexText(f)}${reason ? " (" + reason + ")" : ""}`,
+                );
                 return;
               }
               let from = val(d, "from"),
@@ -3863,7 +4556,14 @@
                 return false;
               }
               if (to < from) [from, to] = [to, from];
-              put("absences", { id: uid(), staffId: sid, from, to, part, reason });
+              put("absences", {
+                id: uid(),
+                staffId: sid,
+                from,
+                to,
+                part,
+                reason,
+              });
               commit(
                 `${staffName(sid)} out of office ${from}${to !== from ? " to " + to : ""}${part !== "ALL" ? " " + part : ""}`,
               );
@@ -3889,7 +4589,10 @@
   <label>Task<input name="title" required value="${esc(w.title)}" placeholder="e.g. Room 214 preventive maintenance" list="wkSugg"></label>
   <datalist id="wkSugg">${[...new Set(live("weekly").map((x) => x.title))].map((t) => `<option value="${esc(t)}">`).join("")}</datalist>
   <label>Person<select name="staffId">${staffList()
-    .map((s) => `<option value="${s.id}" ${s.id === w.staffId ? "selected" : ""}>${esc(s.name)}</option>`)
+    .map(
+      (s) =>
+        `<option value="${s.id}" ${s.id === w.staffId ? "selected" : ""}>${esc(s.name)}</option>`,
+    )
     .join("")}</select></label>
   <label>Notes (optional)<textarea name="notes" rows="2">${esc(w.notes)}</textarea></label>
   <p class="hint">Weekly tasks cover the whole week and don't need to be marked complete. Use “⧉ last week” in the column header to carry them forward.</p>`,
@@ -3898,7 +4601,11 @@
               const title = val(d, "title").trim();
               if (!title) return false;
               const rec = id ? w : { id: uid(), weekStart };
-              Object.assign(rec, { title, staffId: val(d, "staffId"), notes: val(d, "notes") });
+              Object.assign(rec, {
+                title,
+                staffId: val(d, "staffId"),
+                notes: val(d, "notes"),
+              });
               put("weekly", rec);
               commit(
                 `${id ? "Edited" : "Added"} weekly task "${title}" for ${staffName(rec.staffId)} (week of ${rec.weekStart})`,
@@ -3911,7 +4618,9 @@
                     cls: "danger",
                     fn: () => {
                       del("weekly", id);
-                      commit(`Removed weekly task "${w.title}" for ${staffName(w.staffId)}`);
+                      commit(
+                        `Removed weekly task "${w.title}" for ${staffName(w.staffId)}`,
+                      );
                     },
                   },
                 ]
@@ -3931,18 +4640,33 @@
         for (const w of src) {
           const s = get("staff", w.staffId);
           if (!s || s.deleted) continue;
-          if (cur.some((c) => c.staffId === w.staffId && c.title === w.title)) continue;
-          put("weekly", { id: uid(), weekStart, staffId: w.staffId, title: w.title, notes: w.notes || "" });
+          if (cur.some((c) => c.staffId === w.staffId && c.title === w.title))
+            continue;
+          put("weekly", {
+            id: uid(),
+            weekStart,
+            staffId: w.staffId,
+            title: w.title,
+            notes: w.notes || "",
+          });
           n++;
         }
-        commit(n ? `Copied ${n} weekly task${n > 1 ? "s" : ""} from week of ${prev}` : "");
+        commit(
+          n
+            ? `Copied ${n} weekly task${n > 1 ? "s" : ""} from week of ${prev}`
+            : "",
+        );
         if (!n) alert("Everything from last week is already here.");
       }
       function dailyModal(date, id) {
-        const x = id ? get("daily", id) : { title: "", time: "", notes: "", staffIds: [], date };
+        const x = id
+          ? get("daily", id)
+          : { title: "", time: "", notes: "", staffIds: [], date };
         if (!isAdmin()) {
           if (id) {
-            const ids = (x.staffIds || []).filter((i) => get("staff", i) && !get("staff", i).deleted);
+            const ids = (x.staffIds || []).filter(
+              (i) => get("staff", i) && !get("staff", i).deleted,
+            );
             modal(
               x.title,
               `<p class="muted" style="margin-top:-6px">${x.holiday ? "🏖 Holiday — everyone out of office" + (x.part && x.part !== "ALL" ? " (" + x.part + ")" : "") : "Daily joint task" + (x.time ? " · " + esc(x.time) : "")} · ${DAYN[wdIdx(x.date)]} ${md(x.date)}</p>${x.holiday ? "" : `<p style="margin:0 0 8px">${ids.length ? ids.map(staffName).map(esc).join(", ") : "Everyone"}</p>`}${x.notes ? `<div class="notes">${esc(x.notes)}</div>` : ""}`,
@@ -3951,7 +4675,11 @@
           return;
         }
         modal(
-          id ? (x.holiday ? "Holiday" : "Daily joint task") : `Joint task · ${DAYN[wdIdx(date)]} ${md(date)}`,
+          id
+            ? x.holiday
+              ? "Holiday"
+              : "Daily joint task"
+            : `Joint task · ${DAYN[wdIdx(date)]} ${md(date)}`,
           `
   <label class="chk" style="margin-bottom:10px"><input type="checkbox" name="holiday" ${x.holiday ? "checked" : ""}> 🏖 Holiday / closure — mark <b>everyone</b> out of office</label>
   <label>Name<input name="title" required value="${esc(x.title)}" placeholder="e.g. AMD lab meeting"></label>
@@ -3962,7 +4690,10 @@
       ["AM", "AM only"],
       ["PM", "PM only"],
     ]
-      .map(([v, l]) => `<option value="${v}" ${(x.part || "ALL") === v ? "selected" : ""}>${l}</option>`)
+      .map(
+        ([v, l]) =>
+          `<option value="${v}" ${(x.part || "ALL") === v ? "selected" : ""}>${l}</option>`,
+      )
       .join("")}</select></label>
     ${id ? "" : '<label class="hol">Last day (optional)<input type="date" name="last"></label>'}</div>
   <div class="nonhol">${staffPicker(x.staffIds || [], "Who · leave all unticked for everyone")}</div>
@@ -3976,7 +4707,9 @@
               const sync = () => {
                 $$(".hol", d).forEach((e) => (e.hidden = !cb.checked));
                 $$(".nonhol", d).forEach((e) => (e.hidden = cb.checked));
-                t.placeholder = cb.checked ? "e.g. Veterans Day" : "e.g. AMD lab meeting";
+                t.placeholder = cb.checked
+                  ? "e.g. Veterans Day"
+                  : "e.g. AMD lab meeting";
               };
               cb.onchange = sync;
               sync();
@@ -4034,7 +4767,11 @@
               if (d.querySelector("[name=rep]").checked) {
                 const k = Math.min(52, Math.max(1, +val(d, "repn") || 1));
                 for (let i = 1; i <= k; i++) {
-                  put("daily", { id: uid(), date: addDays(dt, 7 * i), ...base });
+                  put("daily", {
+                    id: uid(),
+                    date: addDays(dt, 7 * i),
+                    ...base,
+                  });
                   extra++;
                 }
               }
@@ -4049,7 +4786,9 @@
                     cls: "danger",
                     fn: () => {
                       del("daily", id);
-                      commit(`Removed ${x.holiday ? "holiday" : "joint task"} "${x.title}" on ${x.date}`);
+                      commit(
+                        `Removed ${x.holiday ? "holiday" : "joint task"} "${x.title}" on ${x.date}`,
+                      );
                     },
                   },
                 ]
@@ -4080,7 +4819,10 @@
           `
   <label>Title<input name="title" required value="${esc(r.title)}"></label>
   <div class="row"><label>Repeats<select name="freq">${Object.entries(FREQ)
-    .map(([k, v]) => `<option value="${k}" ${k === r.freq ? "selected" : ""}>${v}</option>`)
+    .map(
+      ([k, v]) =>
+        `<option value="${k}" ${k === r.freq ? "selected" : ""}>${v}</option>`,
+    )
     .join(
       "",
     )}</select></label><label>On<select name="weekday">${DAYN.map((n, i) => `<option value="${i}" ${i == r.weekday ? "selected" : ""}>${n}</option>`).join("")}</select></label><label>Half-day<select name="slot"><option ${r.slot === "AM" ? "selected" : ""}>AM</option><option ${r.slot === "PM" ? "selected" : ""}>PM</option></select></label></div>
@@ -4093,7 +4835,9 @@
             onOk: (d) => {
               const title = val(d, "title").trim();
               if (!title || !val(d, "startDate")) return false;
-              const rec = id ? get("rules", id) : { id: uid(), createdAt: Date.now() };
+              const rec = id
+                ? get("rules", id)
+                : { id: uid(), createdAt: Date.now() };
               Object.assign(rec, {
                 title,
                 freq: val(d, "freq"),
@@ -4111,7 +4855,10 @@
               if (id) {
                 const td = today();
                 live("tasks")
-                  .filter((t) => t.ruleId === id && !t.completedAt && t.deadline >= td)
+                  .filter(
+                    (t) =>
+                      t.ruleId === id && !t.completedAt && t.deadline >= td,
+                  )
                   .forEach((t) => {
                     Object.assign(t, {
                       title: rec.title,
@@ -4124,7 +4871,9 @@
               }
               commit(`${id ? "Edited" : "Created"} recurring task "${title}"`);
             },
-            extra: id ? [{ label: "Delete", cls: "danger", fn: () => deleteRule(id) }] : [],
+            extra: id
+              ? [{ label: "Delete", cls: "danger", fn: () => deleteRule(id) }]
+              : [],
           },
         );
       }
@@ -4132,8 +4881,15 @@
         const r = get("rules", id);
         if (!confirm(`Stop repeating "${r.title}"?`)) return false;
         const td = today();
-        const fut = live("tasks").filter((t) => t.ruleId === id && !t.completedAt && t.deadline >= td);
-        if (fut.length && confirm(`Also remove its ${fut.length} upcoming, unfinished occurrence(s)?`))
+        const fut = live("tasks").filter(
+          (t) => t.ruleId === id && !t.completedAt && t.deadline >= td,
+        );
+        if (
+          fut.length &&
+          confirm(
+            `Also remove its ${fut.length} upcoming, unfinished occurrence(s)?`,
+          )
+        )
           fut.forEach((t) => {
             blocksOf(t.id).forEach((b) => del("blocks", b.id));
             del("tasks", t.id);
@@ -4159,15 +4915,23 @@
         }
         document.body.classList.toggle("is-user", !!meId && !isAdmin());
         if (meId && !isAdmin() && prefs.tab === "sum") prefs.tab = "cal";
-        $$("nav.tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === prefs.tab));
+        $$("nav.tabs button").forEach((b) =>
+          b.classList.toggle("active", b.dataset.tab === prefs.tab),
+        );
         $$(".tab").forEach((t) => (t.hidden = t.id !== "tab-" + prefs.tab));
         const un = myUndo(),
           rd = myRedo();
         $("#undoBtn").disabled = !un;
-        $("#undoBtn").title = un ? `Undo: ${un.msg} (Ctrl+Z)` : "Nothing of yours to undo";
+        $("#undoBtn").title = un
+          ? `Undo: ${un.msg} (Ctrl+Z)`
+          : "Nothing of yours to undo";
         $("#redoBtn").disabled = !rd;
-        $("#redoBtn").title = rd ? `Redo: ${rd.msg} (Ctrl+Y)` : "Nothing to redo";
-        $("#who").innerHTML = meId ? `${esc(me)}<span class="rolechip">${roleName(meRec().role)}</span>` : "";
+        $("#redoBtn").title = rd
+          ? `Redo: ${rd.msg} (Ctrl+Y)`
+          : "Nothing to redo";
+        $("#who").innerHTML = meId
+          ? `${esc(me)}<span class="rolechip">${roleName(meRec().role)}</span>`
+          : "";
         fillProjFilter("#calProj", "All projects", prefs.project);
         fillProjFilter("#fProj", "Any project");
         if (prefs.tab === "cal") renderCal();
@@ -4192,10 +4956,13 @@
         const dates = [...Array(n)].map((_, i) => addDays(weekStart, i));
         const td = today();
         const end = dates[n - 1];
-        $("#weekLabel").textContent = `${md(dates[0])} – ${md(end)}, ${end.slice(0, 4)}`;
+        $("#weekLabel").textContent =
+          `${md(dates[0])} – ${md(end)}, ${end.slice(0, 4)}`;
         const staff = staffList(),
           pf = prefs.project;
-        const blocks = live("blocks").filter((b) => b.date >= dates[0] && b.date <= end);
+        const blocks = live("blocks").filter(
+          (b) => b.date >= dates[0] && b.date <= end,
+        );
         const tasks = new Map(live("tasks").map((t) => [t.id, t]));
         const due = {};
         for (const t of tasks.values())
@@ -4203,10 +4970,15 @@
             (due[t.deadline] ??= []).push(t.title);
         const weekly = live("weekly").filter((w) => w.weekStart === weekStart);
         const nCount = new Map();
-        for (const n of live("notes")) nCount.set(n.taskId, (nCount.get(n.taskId) || 0) + 1);
+        for (const n of live("notes"))
+          nCount.set(n.taskId, (nCount.get(n.taskId) || 0) + 1);
         const daily = live("daily")
           .filter((x) => x.date >= dates[0] && x.date <= end)
-          .sort((a, b) => (a.time || "~").localeCompare(b.time || "~") || a.title.localeCompare(b.title));
+          .sort(
+            (a, b) =>
+              (a.time || "~").localeCompare(b.time || "~") ||
+              a.title.localeCompare(b.title),
+          );
         let h = `<div class="cal" style="--days:${n}"><div class="h corner">Staff</div><div class="h wkh">Weekly tasks<button class="mini admin-only" data-act="copyweekly" title="Copy last week's weekly tasks into this week">⧉ last week</button></div>`;
         for (const d of dates)
           h += `<div class="h ${d === td ? "today" : ""}"><b>${DAYN[wdIdx(d)]}</b> ${md(d)}${due[d] ? `<span class="due" title="${esc("Due:\n" + due[d].join("\n"))}">⚑ ${due[d].length} due</span>` : ""}</div>`;
@@ -4217,7 +4989,9 @@
             h += `<div class="note-item holiday" draggable="${isAdmin()}" data-daily="${x.id}" title="${esc("Holiday – everyone out" + (x.part && x.part !== "ALL" ? " (" + x.part + ")" : "") + (x.notes ? "\n" + x.notes : ""))}"><span>🏖</span><span class="tt">${esc(x.title)}</span>${x.part && x.part !== "ALL" ? `<span class="tm">${x.part}</span>` : ""}</div>`;
           }
           for (const x of daily.filter((x) => x.date === d && !x.holiday)) {
-            const ids = (x.staffIds || []).filter((id) => get("staff", id) && !get("staff", id).deleted);
+            const ids = (x.staffIds || []).filter(
+              (id) => get("staff", id) && !get("staff", id).deleted,
+            );
             const who = ids.length ? ids.map(staffName).join(", ") : "Everyone";
             h += `<div class="note-item" draggable="${isAdmin()}" data-daily="${x.id}" title="${esc(x.title + (x.time ? " · " + x.time : "") + "\n" + who + (x.notes ? "\n" + x.notes : ""))}">${x.time ? `<span class="tm">${esc(x.time)}</span>` : ""}<span class="tt">${esc(x.title)}</span>${ids.length ? `<span class="joint">👥${ids.length}</span>` : ""}</div>`;
           }
@@ -4226,13 +5000,15 @@
         if (!staff.length)
           h += `<div class="empty" style="grid-column:1/-1">No staff yet. <button class="btn primary" data-act="staff">Add staff</button></div>`;
         for (const s of staff) {
-          h += `<div class="sname"><span class="sw" style="background:${s.color}"></span><span class="nm" title="${esc(s.name)}">${esc(s.name)}</span>${(() => {
-            const fx = live("flex").filter((f) => f.staffId === s.id && (!f.until || f.until >= weekStart));
+          h += `<div class="sname" style="--rowc:${s.color}"><span class="sw" style="background:${s.color}"></span><span class="nm" title="${esc(s.name)}">${esc(s.name)}</span>${(() => {
+            const fx = live("flex").filter(
+              (f) => f.staffId === s.id && (!f.until || f.until >= weekStart),
+            );
             return fx.length
               ? `<span class="fxh" title="${esc("Recurring out of office:\n" + fx.map(flexText).join("\n"))}">↻ ${fx.map((f) => f.weekdays.map((i) => DAYN[i]).join("/") + (f.freq === "biweekly" ? "²" : "")).join(", ")}</span>`
               : "";
           })()}<button class="mini admin-only" data-act="ooo" data-staff="${s.id}" title="Mark out of office">✈</button></div>`;
-          h += `<div class="wcell" data-staff="${s.id}">${weekly
+          h += `<div class="wcell" style="--rowc:${s.color}" data-staff="${s.id}">${weekly
             .filter((w) => w.staffId === s.id)
             .map(
               (w) =>
@@ -4242,16 +5018,21 @@
               "",
             )}<button class="add admin-only" data-act="addweekly" title="Add a weekly task">+ add</button></div>`;
           for (const d of dates) {
-            h += `<div class="day ${d === td ? "today" : ""}">`;
+            h += `<div class="day ${d === td ? "today" : ""}" style="--rowc:${s.color}">`;
             for (const sl of ["AM", "PM"]) {
               const ab = absenceAt(s.id, d, sl);
               h += `<div class="slot ${ab ? "ooo" : ""} ${ab && ab.holiday ? "hol" : ""}" data-staff="${s.id}" data-date="${d}" data-slot="${sl}"><span class="lbl">${sl}</span>${ab ? `<span class="ooolbl">Out${ab.reason ? " · " + esc(ab.reason) : ""}</span>` : ""}`;
+              const here = [];
               for (const b of blocks) {
-                if (b.date !== d || b.slot !== sl || !b.staffIds.includes(s.id)) continue;
+                if (b.date !== d || b.slot !== sl || !b.staffIds.includes(s.id))
+                  continue;
                 const t = tasks.get(b.taskId);
                 if (!t || (pf && t.projectId !== pf)) continue;
-                h += chipHTML(b, t, s.id, nCount.get(t.id) || 0);
+                here.push([b, t]);
               }
+              here.sort((x, y) => byPriority(x[1], y[1]));
+              for (const [b, t] of here)
+                h += chipHTML(b, t, s.id, nCount.get(t.id) || 0);
               h += `<button class="add admin-only" data-act="quick" title="Add a task here">+</button></div>`;
             }
             h += "</div>";
@@ -4265,36 +5046,43 @@
           joint = b.staffIds.length > 1,
           late = t.deadline && b.date > t.deadline && !b.done;
         const tip = `${t.title}${p ? " · " + p.name : ""}\nPriority: ${t.priority}${t.deadline ? "\nDue: " + t.deadline : ""}${joint ? "\nJoint with: " + b.staffIds.map(staffName).join(", ") : ""}${late ? "\n⚠ Scheduled after the deadline" : ""}`;
-        return `<div class="chip ${b.done ? "done" : ""} ${late ? "late" : ""}" draggable="${isAdmin()}" data-block="${b.id}" data-from="${sid}" style="--pc:${p?.color || "#98a1b0"}" title="${esc(tip)}"><input type="checkbox" ${b.done ? "checked" : ""} data-act="toggle" title="Mark this half-day complete"><span class="pri" style="background:${pri(t.priority).c}"></span><span class="tt">${esc(t.title)}</span>${nc ? `<span class="joint" title="${nc} note${nc > 1 ? "s" : ""}">💬${nc}</span>` : ""}${joint ? `<span class="joint">👥${b.staffIds.length}</span>` : ""}${late ? '<span class="lateflag">!</span>' : ""}</div>`;
+        return `<div class="chip ${b.done ? "done" : ""} ${late ? "late" : ""}" draggable="true" data-block="${b.id}" data-from="${sid}" style="--pc:${p?.color || "#98a1b0"}" title="${esc(tip)}"><input type="checkbox" ${b.done ? "checked" : ""} data-act="toggle" title="Mark this half-day complete">${priIcon(t.priority)}<span class="tt">${esc(t.title)}</span>${nc ? `<span class="joint" title="${nc} note${nc > 1 ? "s" : ""}">💬${nc}</span>` : ""}${joint ? `<span class="joint">👥${b.staffIds.length}</span>` : ""}${late ? '<span class="lateflag">!</span>' : ""}</div>`;
       }
       function recurringBox() {
         const rules = live("rules");
         if (!rules.length)
           return `<div class="recbox"><h3>Recurring tasks</h3><p class="hint">None set up yet. Add them on the Task list tab.</p></div>`;
-        const due = rules.filter((r) => [...Array(7)].some((_, i) => occurs(r, addDays(weekStart, i))));
+        const due = rules.filter((r) =>
+          [...Array(7)].some((_, i) => occurs(r, addDays(weekStart, i))),
+        );
         const n = pendingRecurring(weekStart);
         return `<div class="recbox"><h3>Recurring tasks</h3><p class="hint">${due.length ? `${due.length} recurring task${due.length > 1 ? "s fall" : " falls"} in this week: ${due.map((r) => esc(r.title)).join(", ")}.` : "None fall in this week."}</p>
   ${n ? `<button class="btn primary wide" data-act="addrecurring">↻ Add ${n} recurring task${n > 1 ? "s" : ""} to this week</button>` : due.length ? '<p class="hint">✓ Already added for this week.</p>' : ""}</div>`;
       }
       function renderSidebar() {
         const el = $("#sidebar");
-        el.hidden = !prefs.sidebar || !isAdmin();
+        el.hidden = !prefs.sidebar;
         if (el.hidden) return;
         const list = live("tasks")
-          .filter((t) => !t.completedAt && !t.gtaskId && (!prefs.project || t.projectId === prefs.project))
+          .filter(
+            (t) =>
+              !t.completedAt &&
+              !t.gtaskId &&
+              (!prefs.project || t.projectId === prefs.project),
+          )
           .map((t) => [t, blocksOf(t.id).length])
           .filter(([t, n]) => n < (t.duration || 1))
-          .sort((a, b) => urgency(a[0], b[0]));
+          .sort((a, b) => byPriority(a[0], b[0]));
         el.innerHTML =
-          `<h3>To schedule <span class="muted">(${list.length})</span></h3><p class="hint">Drag onto a person’s half-day.</p>` +
+          `<h3>To schedule <span class="muted">(${list.length})</span></h3><p class="hint">Highest priority first, then soonest due. Drag onto a person’s half-day, or drag an unfinished half-day back here to unschedule it.</p>` +
           (list
             .map(
               ([t, n]) =>
-                `<div class="stask" draggable="true" data-task="${t.id}" style="--pc:${proj(t.projectId)?.color || "#98a1b0"}"><div class="tt"><span class="pri" style="background:${pri(t.priority).c}"></span>${esc(t.title)}</div><div class="meta">${n}/${t.duration} half-days · due ${dueHTML(t.deadline)}</div></div>`,
+                `<div class="stask" draggable="true" data-task="${t.id}" style="--pc:${proj(t.projectId)?.color || "#98a1b0"}"><div class="tt">${priIcon(t.priority)}${esc(t.title)}</div><div class="meta">${n}/${t.duration} half-days · due ${dueHTML(t.deadline)}</div></div>`,
             )
             .join("") || '<p class="muted">Nothing waiting.</p>') +
-          `<button class="btn wide" data-act="newtask">+ New task</button>` +
-          recurringBox();
+          `<button class="btn wide admin-only" data-act="newtask">+ New task</button>` +
+          (isAdmin() ? recurringBox() : "");
       }
 
       function renderList() {
@@ -4306,10 +5094,18 @@
           td = today();
         let rows = live("tasks")
           .filter((t) => !t.ruleId || t.deadline <= addDays(td, 31))
-          .filter((t) => !(t.gtaskId && get("gtasks", t.gtaskId) && !get("gtasks", t.gtaskId).deleted))
+          .filter(
+            (t) =>
+              !(
+                t.gtaskId &&
+                get("gtasks", t.gtaskId) &&
+                !get("gtasks", t.gtaskId).deleted
+              ),
+          )
           .map((t) => ({ t, bs: blocksOf(t.id) }));
         rows = rows.filter(({ t, bs }) => {
-          if (q && !(t.title + " " + (t.notes || "")).toLowerCase().includes(q)) return false;
+          if (q && !(t.title + " " + (t.notes || "")).toLowerCase().includes(q))
+            return false;
           if (fp && t.projectId !== fp) return false;
           if (fpr && t.priority !== fpr) return false;
           const done = !!t.completedAt;
@@ -4321,8 +5117,10 @@
         });
         const S = {
           urg: (a, b) => urgency(a.t, b.t),
-          deadline: (a, b) => (a.t.deadline || "9999").localeCompare(b.t.deadline || "9999"),
-          pri: (a, b) => pri(a.t.priority).r - pri(b.t.priority).r || urgency(a.t, b.t),
+          deadline: (a, b) =>
+            (a.t.deadline || "9999").localeCompare(b.t.deadline || "9999"),
+          pri: (a, b) =>
+            pri(a.t.priority).r - pri(b.t.priority).r || urgency(a.t, b.t),
           created: (a, b) => (b.t.createdAt || 0) - (a.t.createdAt || 0),
           title: (a, b) => a.t.title.localeCompare(b.t.title),
         };
@@ -4333,11 +5131,14 @@
                 const p = proj(t.projectId),
                   done = !!t.completedAt,
                   ppl = [...new Set(bs.flatMap((b) => b.staffIds))];
-                const pct = Math.min(100, (bs.length / (t.duration || 1)) * 100);
-                return `<tr data-task="${t.id}" draggable="${!done && isAdmin()}" class="${done ? "isdone" : ""}"><td><input type="checkbox" data-act="donetask" data-id="${t.id}" ${done ? "checked" : ""}></td>
+                const pct = Math.min(
+                  100,
+                  (bs.length / (t.duration || 1)) * 100,
+                );
+                return `<tr data-task="${t.id}" draggable="${!done}" class="${done ? "isdone" : ""}"><td><input type="checkbox" data-act="donetask" data-id="${t.id}" ${done ? "checked" : ""}></td>
     <td><div class="ttl">${esc(t.title)}${t.ruleId ? ' <span class="muted" title="Recurring">↻</span>' : ""}${notesOf(t.id).length ? ` <span class="muted" title="Notes">💬${notesOf(t.id).length}</span>` : ""}</div>${t.notes ? `<div class="note">${esc(t.notes)}</div>` : ""}</td>
     <td>${p ? `<span class="tag"><span class="sw" style="background:${p.color}"></span>${esc(p.name)}</span>` : '<span class="muted">—</span>'}</td>
-    <td><span class="pri" style="background:${pri(t.priority).c}"></span> ${t.priority}</td>
+    <td>${priIcon(t.priority)} ${t.priority}</td>
     <td>${t.duration} half-day${t.duration > 1 ? "s" : ""}</td>
     <td><span class="prog"><i style="width:${pct}%"></i></span>${bs.length}/${t.duration}</td>
     <td>${avatars(ppl) || '<span class="muted">—</span>'}</td>
@@ -4346,7 +5147,9 @@
               })
               .join("")}</tbody></table>`
           : '<div class="empty">No tasks match. <button class="btn primary admin-only" data-act="newtask">+ New task</button></div>';
-        const rules = live("rules").sort((a, b) => a.title.localeCompare(b.title));
+        const rules = live("rules").sort((a, b) =>
+          a.title.localeCompare(b.title),
+        );
         $("#ruleTable").innerHTML = rules.length
           ? `<table><thead><tr><th>Task</th><th>Pattern</th><th>People</th><th>Project</th><th>Runs</th><th></th></tr></thead><tbody>${rules
               .map((r) => {
@@ -4404,10 +5207,12 @@
       function openStatus(t, bs) {
         const td = today();
         if (t.deadline && t.deadline < td) return ["Overdue", "bad"];
-        if (bs.some((b) => !b.done && b.date < td)) return ["Missed half-day", "bad"];
+        if (bs.some((b) => !b.done && b.date < td))
+          return ["Missed half-day", "bad"];
         if (!bs.length) return ["Unscheduled", "warn"];
         if (bs.length < (t.duration || 1)) return ["Partly scheduled", "warn"];
-        if (t.deadline && t.deadline <= addDays(td, 7)) return ["Due soon", "warn"];
+        if (t.deadline && t.deadline <= addDays(td, 7))
+          return ["Due soon", "warn"];
         return ["On track", "ok"];
       }
       /* Builds the summary from the main data plus any archive years the period reaches into.
@@ -4428,13 +5233,15 @@
         const lastDate = new Map(),
           ppl = new Map();
         for (const b of blocks) {
-          if (!lastDate.has(b.taskId) || b.date > lastDate.get(b.taskId)) lastDate.set(b.taskId, b.date);
+          if (!lastDate.has(b.taskId) || b.date > lastDate.get(b.taskId))
+            lastDate.set(b.taskId, b.date);
           let s = ppl.get(b.taskId);
           if (!s) ppl.set(b.taskId, (s = new Set()));
           b.staffIds.forEach((x) => s.add(x));
         }
         /* a task's work date = its last scheduled half-day (or the day it was ticked complete) */
-        const workDate = (t) => lastDate.get(t.id) || ymd(new Date(t.completedAt));
+        const workDate = (t) =>
+          lastDate.get(t.id) || ymd(new Date(t.completedAt));
         const ontime = (t) => workDate(t) <= t.deadline;
         const staffByName = new Map(DB.staff.map((x) => [x.name, x.id]));
         const staffOf = (t) => {
@@ -4443,8 +5250,10 @@
           const m = staffByName.get(t.completedBy);
           return m ? [m] : [];
         };
-        const days = (t) => Math.max(0, (t.completedAt - (t.createdAt || t.completedAt)) / 864e5);
-        const avg = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : null);
+        const days = (t) =>
+          Math.max(0, (t.completedAt - (t.createdAt || t.completedAt)) / 864e5);
+        const avg = (a) =>
+          a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
         const done = tasks.filter((t) => t.completedAt && inR(workDate(t)));
         const open = live("tasks").filter(
           (t) => !t.completedAt && !(t.ruleId && t.deadline > addDays(td, 14)),
@@ -4453,7 +5262,18 @@
         const P = new Map(),
           row = (id) => {
             let r = P.get(id);
-            if (!r) P.set(id, (r = { done: 0, dl: 0, ot: 0, half: 0, open: new Set(), missed: 0 }));
+            if (!r)
+              P.set(
+                id,
+                (r = {
+                  done: 0,
+                  dl: 0,
+                  ot: 0,
+                  half: 0,
+                  open: new Set(),
+                  missed: 0,
+                }),
+              );
             return r;
           };
         staffList().forEach((s) => row(s.id));
@@ -4510,7 +5330,9 @@
       function summaryArchiveYears(from) {
         const at = DB.meta?.archivedThrough;
         if (!at || from >= at) return [];
-        return knownArchiveYears.filter((y) => String(y) >= from.slice(0, 4) && String(y) <= at.slice(0, 4));
+        return knownArchiveYears.filter(
+          (y) => String(y) >= from.slice(0, 4) && String(y) <= at.slice(0, 4),
+        );
       }
       async function ensureSummaryArchives() {
         if (!DB.meta?.archivedThrough) return false;
@@ -4539,8 +5361,8 @@
           })
           .sort(
             (a, b) =>
-              ({ bad: 0, warn: 1, ok: 2 })[a.st[1]] - { bad: 0, warn: 1, ok: 2 }[b.st[1]] ||
-              urgency(a.t, b.t),
+              ({ bad: 0, warn: 1, ok: 2 })[a.st[1]] -
+                { bad: 0, warn: 1, ok: 2 }[b.st[1]] || urgency(a.t, b.t),
           );
         const logs = DB.log.slice(-200).reverse();
         $("#summary").innerHTML = `<div class="cards">
@@ -4581,7 +5403,9 @@
                 r
                   .map((v) => {
                     v = v == null ? "" : String(v);
-                    return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+                    return /[",\r\n]/.test(v)
+                      ? '"' + v.replace(/"/g, '""') + '"'
+                      : v;
                   })
                   .join(","),
               )
@@ -4615,7 +5439,9 @@
                 t.priority,
                 t.duration,
                 bs.length,
-                [...new Set(bs.flatMap((b) => b.staffIds))].map(staffName).join("; "),
+                [...new Set(bs.flatMap((b) => b.staffIds))]
+                  .map(staffName)
+                  .join("; "),
                 t.deadline || "",
                 fmtTs(t.createdAt),
                 fmtTs(t.completedAt),
@@ -4632,7 +5458,17 @@
           .filter((b) => b.date >= weekStart && b.date <= end)
           .sort((a, b) => (a.date + a.slot).localeCompare(b.date + b.slot));
         csv(`week-${weekStart}.csv`, [
-          ["Date", "Day", "Half-day", "Staff", "Task", "Project", "Priority", "Joint", "Done"],
+          [
+            "Date",
+            "Day",
+            "Half-day",
+            "Staff",
+            "Task",
+            "Project",
+            "Priority",
+            "Joint",
+            "Done",
+          ],
           ...rows.flatMap((b) => {
             const t = get("tasks", b.taskId);
             if (!t || t.deleted) return [];
@@ -4650,7 +5486,17 @@
           }),
           ...live("weekly")
             .filter((w) => w.weekStart === weekStart)
-            .map((w) => [weekStart, "Week", "", staffName(w.staffId), "WEEKLY – " + w.title, "", "", "", ""]),
+            .map((w) => [
+              weekStart,
+              "Week",
+              "",
+              staffName(w.staffId),
+              "WEEKLY – " + w.title,
+              "",
+              "",
+              "",
+              "",
+            ]),
           ...live("daily")
             .filter((x) => x.date >= weekStart && x.date <= end)
             .sort((a, b) => a.date.localeCompare(b.date))
@@ -4685,7 +5531,12 @@
           ...[...Array(7)].flatMap((_, i) => {
             const d = addDays(weekStart, i);
             return live("flex")
-              .filter((f) => flexOn(f, d) && get("staff", f.staffId) && !get("staff", f.staffId).deleted)
+              .filter(
+                (f) =>
+                  flexOn(f, d) &&
+                  get("staff", f.staffId) &&
+                  !get("staff", f.staffId).deleted,
+              )
               .map((f) => [
                 d,
                 DAYN[wdIdx(d)],
@@ -4713,9 +5564,24 @@
             "Open tasks in period",
             "Missed half-days",
           ],
-          ...S.per.map((p) => [p.name, p.done, p.half, pc(p.ontime), p.open, p.missed]),
+          ...S.per.map((p) => [
+            p.name,
+            p.done,
+            p.half,
+            pc(p.ontime),
+            p.open,
+            p.missed,
+          ]),
           [],
-          ["Team", "Completed", S.done.length, "Avg days", f1(S.avgDays), "On time", pc(S.ontime)],
+          [
+            "Team",
+            "Completed",
+            S.done.length,
+            "Avg days",
+            f1(S.avgDays),
+            "On time",
+            pc(S.ontime),
+          ],
           [],
           ["Incomplete task", "Status", "Deadline", "Scheduled", "Priority"],
           ...S.open.map((t) => {
@@ -4826,7 +5692,11 @@
           },
         ].map((p) => ({
           name: p.name,
-          tasks: p.tasks.map(([title, roleHint]) => ({ title, roleHint, days: null })),
+          tasks: p.tasks.map(([title, roleHint]) => ({
+            title,
+            roleHint,
+            days: null,
+          })),
         })),
       };
       const GCW = 22; // width of one day column on the Gantt, in pixels
@@ -4845,26 +5715,39 @@
         live("gtasks")
           .filter((g) => g.vpId === vpId)
           .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-      const canEditVP = (vp) => !!vp && !!meId && (isAdmin() || vp.leadId === meId);
-      const canProgressGT = (g) => canEditVP(get("vprojects", g.vpId)) || teamOf(g).includes(meId);
+      const canEditVP = (vp) =>
+        !!vp && !!meId && (isAdmin() || vp.leadId === meId);
+      const canProgressGT = (g) =>
+        canEditVP(get("vprojects", g.vpId)) || teamOf(g).includes(meId);
       const vpColor = (vp) => proj(vp?.projectId)?.color || "#2f6fde";
-      const phaseName = (vp, id) => vp?.phases?.find((p) => p.id === id)?.name || "";
+      const phaseName = (vp, id) =>
+        vp?.phases?.find((p) => p.id === id)?.name || "";
       const getTemplate = () => {
         const t = get("templates", "default");
         return t && !t.deleted && t.phases?.length ? t : BUILTIN_TEMPLATE;
       };
       /* older records (first Gantt version) stored one half-day range and free-text outside names */
-      const spansOf = (g) => g.spans || (g.start && g.end ? [{ from: g.start.date, to: g.end.date }] : []);
+      const spansOf = (g) =>
+        g.spans ||
+        (g.start && g.end ? [{ from: g.start.date, to: g.end.date }] : []);
       const rolesOf = (g) =>
         g.roles ||
         (g.external
           ? OUTSIDE.filter((r) =>
-              new RegExp(r === "Director" ? "dir" : r === "BINFX" ? "binfx|bioinf" : "\\bqa\\b", "i").test(
-                g.external,
-              ),
+              new RegExp(
+                r === "Director"
+                  ? "dir"
+                  : r === "BINFX"
+                    ? "binfx|bioinf"
+                    : "\\bqa\\b",
+                "i",
+              ).test(g.external),
             )
           : []);
-      const teamOf = (g) => (g.staffIds || []).filter((id) => get("staff", id) && !get("staff", id).deleted);
+      const teamOf = (g) =>
+        (g.staffIds || []).filter(
+          (id) => get("staff", id) && !get("staff", id).deleted,
+        );
       const outsideOnly = (g) => !teamOf(g).length && rolesOf(g).length > 0;
       const firstDay = (g) =>
         spansOf(g)
@@ -4888,7 +5771,8 @@
           HOL = new Set();
           for (const x of live("daily"))
             if (x.holiday) {
-              if (!x.part || x.part === "ALL") HOL.add(x.date + "AM").add(x.date + "PM");
+              if (!x.part || x.part === "ALL")
+                HOL.add(x.date + "AM").add(x.date + "PM");
               else HOL.add(x.date + x.part);
             }
         }
@@ -4898,10 +5782,16 @@
       const workDay = (d) => workSlot(d, "AM") || workSlot(d, "PM");
       function daysIn(sp) {
         const out = [];
-        for (let d = sp.from, n = 0; d <= sp.to && n < 800; d = addDays(d, 1), n++) out.push(d);
+        for (
+          let d = sp.from, n = 0;
+          d <= sp.to && n < 800;
+          d = addDays(d, 1), n++
+        )
+          out.push(d);
         return out;
       }
-      const workDaysOf = (g) => spansOf(g).reduce((a, sp) => a + daysIn(sp).filter(workDay).length, 0);
+      const workDaysOf = (g) =>
+        spansOf(g).reduce((a, sp) => a + daysIn(sp).filter(workDay).length, 0);
       const nextWorkDay = (d) => {
         let x = addDays(d, 1);
         for (let n = 0; !workDay(x) && n < 60; n++) x = addDays(x, 1);
@@ -4923,8 +5813,10 @@
         }
         return out;
       }
-      const spansFromDays = (days) => normSpans([...new Set(days)].map((d) => ({ from: d, to: d })));
-      const fmtSpan = (s) => (s.from === s.to ? md(s.from) : `${md(s.from)} – ${md(s.to)}`);
+      const spansFromDays = (days) =>
+        normSpans([...new Set(days)].map((d) => ({ from: d, to: d })));
+      const fmtSpan = (s) =>
+        s.from === s.to ? md(s.from) : `${md(s.from)} – ${md(s.to)}`;
       const fmtSpans = (g) => spansOf(g).map(fmtSpan).join(", ") || "—";
 
       /* --- status & progress --- */
@@ -4973,18 +5865,29 @@
           ts.some((g) => g.phaseId === p.id && (g.progress || 0) < 100),
         );
         let status;
-        if (vp.status === "done" || (ts.length && pct >= 100)) status = ["Complete", "ok"];
+        if (vp.status === "done" || (ts.length && pct >= 100))
+          status = ["Complete", "ok"];
         else if (!dated) status = ["Not scheduled", "warn"];
         else if (overdue || pct < exp - 10) status = ["Behind", "bad"];
         else if (exp === 0 && pct === 0) status = ["Not started", "muted"];
         else status = ["On track", "ok"];
-        return { tasks: all, pct, exp, overdue, finish, phase: cur?.name || "—", status };
+        return {
+          tasks: all,
+          pct,
+          exp,
+          overdue,
+          finish,
+          phase: cur?.name || "—",
+          status,
+        };
       }
 
       /* --- Gantt ⇄ calendar --- */
       let ganttEditing = false;
-      const linkedTasks = (gid) => live("tasks").filter((t) => t.gtaskId === gid);
-      const linkedBlocks = (gid) => linkedTasks(gid).flatMap((t) => blocksOf(t.id));
+      const linkedTasks = (gid) =>
+        live("tasks").filter((t) => t.gtaskId === gid);
+      const linkedBlocks = (gid) =>
+        linkedTasks(gid).flatMap((t) => blocksOf(t.id));
       function linkedTask(g, create) {
         let t = linkedTasks(g.id)[0];
         if (!t && create) {
@@ -5029,7 +5932,8 @@
         if (team.length && !g.deleted)
           for (const sp of spansOf(g))
             for (const d of daysIn(sp))
-              for (const s of ["AM", "PM"]) if (workSlot(d, s)) want.set(d + s, { date: d, slot: s });
+              for (const s of ["AM", "PM"])
+                if (workSlot(d, s)) want.set(d + s, { date: d, slot: s });
         const have = linkedBlocks(g.id);
         if (!want.size && !have.length) return;
         const t = linkedTask(g, true),
@@ -5051,7 +5955,11 @@
               staffIds: [...team],
               done: false,
             });
-        if (keptDone.length) setSpans(g, [...spansOf(g), ...keptDone.map((d) => ({ from: d, to: d }))]); // finished half-days stay on the chart
+        if (keptDone.length)
+          setSpans(g, [
+            ...spansOf(g),
+            ...keptDone.map((d) => ({ from: d, to: d })),
+          ]); // finished half-days stay on the chart
         tidyLinked(g);
       }
       /* assignment changed on the Gantt: unfinished half-days follow the new team */
@@ -5152,7 +6060,10 @@
             }
           if (ids.length) g.autoTicked = [...(g.autoTicked || []), ...ids];
         }
-        if (p < 0) p = bs.length ? Math.round((100 * bs.filter((b) => b.done).length) / bs.length) : 0;
+        if (p < 0)
+          p = bs.length
+            ? Math.round((100 * bs.filter((b) => b.done).length) / bs.length)
+            : 0;
         if (p >= 100 && !g.completedAt) g.completedAt = Date.now();
         if (p < 100) g.completedAt = null;
         g.progress = Math.min(100, p);
@@ -5167,10 +6078,25 @@
           vp = g && get("vprojects", g.vpId);
         if (!g || !canEditVP(vp)) return;
         const ab = absenceAt(staff, date, slot);
-        if (ab && !confirm(`${staffName(staff)} is out of office then. Schedule anyway?`)) return;
+        if (
+          ab &&
+          !confirm(
+            `${staffName(staff)} is out of office then. Schedule anyway?`,
+          )
+        )
+          return;
         const t = linkedTask(g, true);
-        put("blocks", { id: uid(), taskId: t.id, date, slot, staffIds: [staff], done: false });
-        commit(`Scheduled "${g.title}" (${vp.name}) for ${staffName(staff)} on ${date} ${slot}`);
+        put("blocks", {
+          id: uid(),
+          taskId: t.id,
+          date,
+          slot,
+          staffIds: [staff],
+          done: false,
+        });
+        commit(
+          `Scheduled "${g.title}" (${vp.name}) for ${staffName(staff)} on ${date} ${slot}`,
+        );
       }
       function removeGtask(g) {
         for (const b of linkedBlocks(g.id)) if (!b.done) del("blocks", b.id);
@@ -5187,7 +6113,8 @@
         const team = teamOf(g),
           roles = rolesOf(g);
         return (
-          avatars(team) + roles.map((r) => `<span class="ext">${r}</span>`).join("") ||
+          avatars(team) +
+            roles.map((r) => `<span class="ext">${r}</span>`).join("") ||
           `<span class="muted">${esc(hint ? g.roleHint || "Assign…" : "Nobody yet")}</span>`
         );
       }
@@ -5221,12 +6148,17 @@
           const g = get("gtasks", dd.dataset.gid);
           if (!g || !canEditVP(get("vprojects", g.vpId))) return;
           const [st, ro] = ddPicked(dd);
-          if (st.sort().join() === teamOf(g).sort().join() && ro.sort().join() === rolesOf(g).sort().join()) {
+          if (
+            st.sort().join() === teamOf(g).sort().join() &&
+            ro.sort().join() === rolesOf(g).sort().join()
+          ) {
             if (deferred) render();
             return;
           }
           applyAssignees(g, st, ro);
-          gtCommit(`Assigned "${g.title}" to ${[...st.map(staffName), ...ro].join(", ") || "nobody"}`);
+          gtCommit(
+            `Assigned "${g.title}" to ${[...st.map(staffName), ...ro].join(", ") || "nobody"}`,
+          );
         },
         true,
       );
@@ -5234,9 +6166,13 @@
       /* --- Validations tab --- */
       function renderVal() {
         const list = vpList();
-        if (prefs.gv !== "mine" && !list.some((v) => v.id === prefs.gv)) prefs.gv = "mine";
+        if (prefs.gv !== "mine" && !list.some((v) => v.id === prefs.gv))
+          prefs.gv = "mine";
         const nMine = live("gtasks").filter(
-          (g) => teamOf(g).includes(meId) && (g.progress || 0) < 100 && vpActive(get("vprojects", g.vpId)),
+          (g) =>
+            teamOf(g).includes(meId) &&
+            (g.progress || 0) < 100 &&
+            vpActive(get("vprojects", g.vpId)),
         ).length;
         const item = (v) => {
           const S = vpStats(v);
@@ -5256,8 +6192,15 @@
       function renderMyTasks() {
         const showDone = !!prefs.gvDone;
         const rows = live("gtasks")
-          .filter((g) => teamOf(g).includes(meId) && !get("vprojects", g.vpId)?.deleted)
-          .filter((g) => showDone || ((g.progress || 0) < 100 && vpActive(get("vprojects", g.vpId))))
+          .filter(
+            (g) =>
+              teamOf(g).includes(meId) && !get("vprojects", g.vpId)?.deleted,
+          )
+          .filter(
+            (g) =>
+              showDone ||
+              ((g.progress || 0) < 100 && vpActive(get("vprojects", g.vpId))),
+          )
           .sort(
             (a, b) =>
               ((a.progress || 0) >= 100) - ((b.progress || 0) >= 100) ||
@@ -5289,9 +6232,13 @@
 
       let GC = null; // day columns of the Gantt currently on screen (used by pointer handlers and export)
       function ganttCols(vp, ts) {
-        const keys = ts.flatMap((g) => spansOf(g).flatMap((s) => [s.from, s.to]));
+        const keys = ts.flatMap((g) =>
+          spansOf(g).flatMap((s) => [s.from, s.to]),
+        );
         const lo = [vp.startDate || today(), ...keys].sort()[0];
-        const hi = [addDays(vp.startDate || today(), 7 * 10), ...keys].sort().pop();
+        const hi = [addDays(vp.startDate || today(), 7 * 10), ...keys]
+          .sort()
+          .pop();
         let d = mondayOf(lo);
         const stop = addDays(mondayOf(hi), 13),
           cols = [];
@@ -5311,7 +6258,9 @@
           else hi = m - 1;
         }
         if (lo < c.length && c[lo] === d) return lo;
-        return kind === "start" ? Math.min(lo, c.length - 1) : Math.max(lo - 1, 0);
+        return kind === "start"
+          ? Math.min(lo, c.length - 1)
+          : Math.max(lo - 1, 0);
       }
       function renderProject(vp) {
         const ed = canEditVP(vp),
@@ -5329,16 +6278,19 @@
           if (i === 0 || wdIdx(d) === 0)
             wk += `<div class="gwk" style="left:${i * GCW}px">${md(d)}${d.slice(5, 7) === "01" && d.slice(8) <= "07" ? " " + d.slice(0, 4) : ""}</div>`;
           days += `<div class="gday ${d === td ? "today" : ""} ${workDay(d) ? "" : "off"}" style="left:${i * GCW}px">${DAYN[wdIdx(d)][0]}<br>${+d.slice(8)}</div>`;
-          if (!workDay(d)) deco += `<i class="goff" style="left:${i * GCW}px"></i>`;
+          if (!workDay(d))
+            deco += `<i class="goff" style="left:${i * GCW}px"></i>`;
         });
         const ti = cols.indexOf(td);
-        if (ti >= 0) deco += `<i class="gtoday" style="left:${ti * GCW}px"></i>`;
+        if (ti >= 0)
+          deco += `<i class="gtoday" style="left:${ti * GCW}px"></i>`;
         /* one bar per date block; progress fills the blocks left to right */
         const bars = (g, cls = "") => {
           const sp = spansOf(g);
           if (!sp.length) return "";
           const tot = sp.reduce(
-            (a, s) => a + Math.max(0, colOf(s.to, "end") - colOf(s.from, "start") + 1),
+            (a, s) =>
+              a + Math.max(0, colOf(s.to, "end") - colOf(s.from, "start") + 1),
             0,
           );
           let fill = (tot * (g.progress || 0)) / 100,
@@ -5363,11 +6315,19 @@
           if (dated.length) {
             const w = pts.reduce((a, g) => a + Math.max(1, workDaysOf(g)), 0);
             const pr = Math.round(
-              pts.reduce((a, g) => a + Math.max(1, workDaysOf(g)) * (g.progress || 0), 0) / (w || 1),
+              pts.reduce(
+                (a, g) => a + Math.max(1, workDaysOf(g)) * (g.progress || 0),
+                0,
+              ) / (w || 1),
             );
             sum = bars(
               {
-                spans: [{ from: dated.map(firstDay).sort()[0], to: dated.map(lastDay).sort().pop() }],
+                spans: [
+                  {
+                    from: dated.map(firstDay).sort()[0],
+                    to: dated.map(lastDay).sort().pop(),
+                  },
+                ],
                 progress: pr,
               },
               "phase",
@@ -5388,7 +6348,10 @@
         const lead = vp.leadId ? staffName(vp.leadId) : "—",
           bench = vp.benchLeadId ? staffName(vp.benchLeadId) : "—";
         const old = $("#gscroll"),
-          keep = old && old.dataset.vp === vp.id ? [old.scrollLeft, old.scrollTop] : null;
+          keep =
+            old && old.dataset.vp === vp.id
+              ? [old.scrollLeft, old.scrollTop]
+              : null;
         $("#vmain").innerHTML = `
           <div class="vhead">
             <div class="vtitle"><span class="sw" style="background:${vpColor(vp)}"></span><h2>${esc(vp.name)}</h2><span class="badge ${S.status[1]}">${S.status[0]}</span>${ed && !isAdmin() ? '<span class="rolechip">You lead this project</span>' : ""}</div>
@@ -5425,7 +6388,10 @@
         if (!g || !canEditVP(vp)) return;
         const col = Math.max(
           0,
-          Math.min(GC.cols.length - 1, Math.floor((e.clientX - gr.getBoundingClientRect().left) / GCW)),
+          Math.min(
+            GC.cols.length - 1,
+            Math.floor((e.clientX - gr.getBoundingClientRect().left) / GCW),
+          ),
         );
         const onBar = e.target.closest(".gbar");
         const si = onBar ? +onBar.dataset.si : -1,
@@ -5439,7 +6405,19 @@
           : "create";
         const s0 = sp ? colOf(sp.from, "start") : col,
           e0 = sp ? colOf(sp.to, "end") : col;
-        gDrag = { g, gr, si, mode, col0: col, s0, e0, s: s0, e: e0, moved: false, bar: onBar };
+        gDrag = {
+          g,
+          gr,
+          si,
+          mode,
+          col0: col,
+          s0,
+          e0,
+          s: s0,
+          e: e0,
+          moved: false,
+          bar: onBar,
+        };
         gr.setPointerCapture(e.pointerId);
         dragging = true;
         e.preventDefault();
@@ -5451,11 +6429,15 @@
           n = GC.cols.length;
         const col = Math.max(
           0,
-          Math.min(n - 1, Math.floor((e.clientX - D.gr.getBoundingClientRect().left) / GCW)),
+          Math.min(
+            n - 1,
+            Math.floor((e.clientX - D.gr.getBoundingClientRect().left) / GCW),
+          ),
         );
         const d = col - D.col0;
         if (d) D.moved = true;
-        if (D.mode === "create") [D.s, D.e] = [Math.min(D.col0, col), Math.max(D.col0, col)];
+        if (D.mode === "create")
+          [D.s, D.e] = [Math.min(D.col0, col), Math.max(D.col0, col)];
         else if (D.mode === "move") {
           const dd = Math.max(-D.s0, Math.min(n - 1 - D.e0, d));
           [D.s, D.e] = [D.s0 + dd, D.e0 + dd];
@@ -5503,7 +6485,10 @@
         return (
           (blank ? `<option value="">${blank}</option>` : "") +
           staffList()
-            .map((s) => `<option value="${s.id}" ${s.id === sel ? "selected" : ""}>${esc(s.name)}</option>`)
+            .map(
+              (s) =>
+                `<option value="${s.id}" ${s.id === sel ? "selected" : ""}>${esc(s.name)}</option>`,
+            )
             .join("")
         );
       }
@@ -5521,7 +6506,9 @@
             };
         if (id ? !canEditVP(vp) : !isAdmin()) return;
         const T = getTemplate(),
-          runs = T.phases.flatMap((p) => p.tasks).filter((t) => RUN_RX.test(t.title)).length;
+          runs = T.phases
+            .flatMap((p) => p.tasks)
+            .filter((t) => RUN_RX.test(t.title)).length;
         modal(
           id ? "Project details" : "New validation project",
           `
@@ -5554,7 +6541,14 @@
             onOk: (d) => {
               const name = val(d, "name").trim();
               if (!name) return false;
-              const rec = id ? vp : { id: uid(), status: "active", phases: [], createdAt: Date.now() };
+              const rec = id
+                ? vp
+                : {
+                    id: uid(),
+                    status: "active",
+                    phases: [],
+                    createdAt: Date.now(),
+                  };
               let pid = val(d, "projectId");
               if (pid === "__new")
                 pid = put("projects", {
@@ -5572,7 +6566,9 @@
               });
               if (isAdmin()) rec.leadId = val(d, "leadId");
               if (!id && d.querySelector("[name=usetpl]").checked) {
-                const nRuns = d.querySelector("[name=runs]") ? Math.max(0, +val(d, "runs") || 0) : null;
+                const nRuns = d.querySelector("[name=runs]")
+                  ? Math.max(0, +val(d, "runs") || 0)
+                  : null;
                 let order = 0;
                 for (const p of T.phases) {
                   const ph = { id: uid(), name: p.name };
@@ -5588,7 +6584,9 @@
                     tasks = [
                       ...tasks.slice(0, at),
                       ...made,
-                      ...tasks.filter((t, i) => i > at && !RUN_RX.test(t.title)),
+                      ...tasks.filter(
+                        (t, i) => i > at && !RUN_RX.test(t.title),
+                      ),
                     ];
                   }
                   for (const t of tasks)
@@ -5610,14 +6608,18 @@
                               : [],
                       spans: [],
                       progress: 0,
-                      daysHint: t.days || (t.halfDays ? Math.ceil(t.halfDays / 2) : null),
+                      daysHint:
+                        t.days ||
+                        (t.halfDays ? Math.ceil(t.halfDays / 2) : null),
                     });
                 }
               }
               put("vprojects", rec);
               if (!id) prefs.gv = rec.id;
               if (id) for (const g of gtOf(rec.id)) tidyLinked(g); // renamed project → linked calendar titles follow
-              gtCommit(`${id ? "Edited" : "Created"} validation project "${name}"`);
+              gtCommit(
+                `${id ? "Edited" : "Created"} validation project "${name}"`,
+              );
             },
           },
         );
@@ -5631,7 +6633,9 @@
           ? {
               label: "↺ Reopen",
               fn: (d) => (
-                (d.querySelector("form").dataset.reopen = "1"), d.querySelector("form").requestSubmit(), false
+                (d.querySelector("form").dataset.reopen = "1"),
+                d.querySelector("form").requestSubmit(),
+                false
               ),
             }
           : {
@@ -5646,14 +6650,25 @@
       function gtaskModal(id, vpId, phaseId) {
         const g = id
           ? get("gtasks", id)
-          : { title: "", vpId, phaseId, staffIds: [], roles: [], spans: [], progress: 0, roleHint: "" };
+          : {
+              title: "",
+              vpId,
+              phaseId,
+              staffIds: [],
+              roles: [],
+              spans: [],
+              progress: 0,
+              roleHint: "",
+            };
         const vp = get("vprojects", g.vpId);
         if (!vp) return;
         const ed = canEditVP(vp),
           pr = canProgressGT(g);
         if (!id && !ed) return;
         const lbs = id
-          ? linkedBlocks(id).sort((a, b) => (a.date + a.slot).localeCompare(b.date + b.slot))
+          ? linkedBlocks(id).sort((a, b) =>
+              (a.date + a.slot).localeCompare(b.date + b.slot),
+            )
           : [];
         const sched = id
           ? `<h4>On the calendar</h4>${lbs.length ? `<div class="muted" style="font-size:13px">${lbs.length} half-day${lbs.length > 1 ? "s" : ""}: ${lbs.map((b) => `${DAYN[wdIdx(b.date)]} ${md(b.date)} ${b.slot}${b.done ? " ✓" : ""}`).join(" · ")}</div>` : `<div class="muted" style="font-size:13px">${outsideOnly(g) ? "Outside reviewers only — not shown on the calendar." : teamOf(g).length ? "Add date blocks to put it on the calendar." : "Assign team members to put it on the calendar."}</div>`}`
@@ -5670,8 +6685,14 @@
               onMount: wireNotes,
               onOk: (d) => {
                 addNote(d, id);
-                const p = d.querySelector("form").dataset.reopen ? -1 : +val(d, "progress");
-                if (pr && (p !== (g.progress || 0) || d.querySelector("form").dataset.reopen)) {
+                const p = d.querySelector("form").dataset.reopen
+                  ? -1
+                  : +val(d, "progress");
+                if (
+                  pr &&
+                  (p !== (g.progress || 0) ||
+                    d.querySelector("form").dataset.reopen)
+                ) {
                   setGtProgress(g, p);
                   gtCommit(
                     `${p >= 100 ? "Completed" : d.querySelector("form").dataset.reopen ? "Reopened" : "Updated progress of"} "${g.title}" (${vp.name})${p >= 0 && p < 100 ? " to " + p + "%" : ""}`,
@@ -5702,13 +6723,16 @@
               const read = () =>
                 $$(".spanrow", box).map((r) => ({
                   from: r.querySelector("[name=sf]").value,
-                  to: r.querySelector("[name=st]").value || r.querySelector("[name=sf]").value,
+                  to:
+                    r.querySelector("[name=st]").value ||
+                    r.querySelector("[name=sf]").value,
                 }));
               const upd = () =>
                 (d.querySelector("#wdn").textContent =
                   workDaysOf({ spans: normSpans(read()) }) + " working day(s)");
               d.querySelector("form").addEventListener("click", (e) => {
-                if (e.target.closest("[data-addspan]")) box.insertAdjacentHTML("beforeend", spanRow());
+                if (e.target.closest("[data-addspan]"))
+                  box.insertAdjacentHTML("beforeend", spanRow());
                 const rm = e.target.closest("[data-rmspan]");
                 if (rm) {
                   rm.closest(".spanrow").remove();
@@ -5719,7 +6743,8 @@
                 const r = e.target.closest(".spanrow"),
                   f = r.querySelector("[name=sf]"),
                   t = r.querySelector("[name=st]");
-                if (e.target === f && (!t.value || t.value < f.value)) t.value = f.value;
+                if (e.target === f && (!t.value || t.value < f.value))
+                  t.value = f.value;
                 upd();
               });
             },
@@ -5729,7 +6754,9 @@
               const spans = $$(".spanrow", d)
                 .map((r) => ({
                   from: r.querySelector("[name=sf]").value,
-                  to: r.querySelector("[name=st]").value || r.querySelector("[name=sf]").value,
+                  to:
+                    r.querySelector("[name=st]").value ||
+                    r.querySelector("[name=sf]").value,
                 }))
                 .filter((s) => s.from);
               const [st, ro] = ddPicked(d);
@@ -5738,18 +6765,31 @@
                 : {
                     id: uid(),
                     vpId: vp.id,
-                    order: Math.max(0, ...gtOf(vp.id).map((x) => (x.order ?? 0) + 1)),
+                    order: Math.max(
+                      0,
+                      ...gtOf(vp.id).map((x) => (x.order ?? 0) + 1),
+                    ),
                     staffIds: [],
                     roles: [],
                   };
-              Object.assign(rec, { title, phaseId: val(d, "phaseId"), roleHint: val(d, "roleHint").trim() });
+              Object.assign(rec, {
+                title,
+                phaseId: val(d, "phaseId"),
+                roleHint: val(d, "roleHint").trim(),
+              });
               if (!id) rec.progress = 0;
               setSpans(rec, spans);
               if (id) addNote(d, id);
               put("gtasks", rec);
               applyAssignees(rec, st, ro);
-              const p = d.querySelector("form").dataset.reopen ? -1 : +val(d, "progress");
-              if (p !== (rec.progress || 0) || d.querySelector("form").dataset.reopen) setGtProgress(rec, p);
+              const p = d.querySelector("form").dataset.reopen
+                ? -1
+                : +val(d, "progress");
+              if (
+                p !== (rec.progress || 0) ||
+                d.querySelector("form").dataset.reopen
+              )
+                setGtProgress(rec, p);
               gtCommit(
                 `${id ? "Edited" : "Added"} project task "${title}" (${vp.name})${p >= 100 && id ? " — marked complete" : ""}`,
               );
@@ -5768,7 +6808,9 @@
                       )
                         return false;
                       removeGtask(g);
-                      gtCommit(`Deleted project task "${g.title}" (${vp.name})`);
+                      gtCommit(
+                        `Deleted project task "${g.title}" (${vp.name})`,
+                      );
                     },
                   },
                 ]
@@ -5777,13 +6819,17 @@
         );
       }
       function askText(title, label, value, cb) {
-        modal(title, `<label>${label}<input name="v" required value="${esc(value || "")}"></label>`, {
-          onOk: (d) => {
-            const v = val(d, "v").trim();
-            if (!v) return false;
-            cb(v);
+        modal(
+          title,
+          `<label>${label}<input name="v" required value="${esc(value || "")}"></label>`,
+          {
+            onOk: (d) => {
+              const v = val(d, "v").trim();
+              if (!v) return false;
+              cb(v);
+            },
           },
-        });
+        );
       }
       function autofillModal(vp) {
         modal(
@@ -5801,13 +6847,16 @@
               let cur = toWorkDay(val(d, "from") || vp.startDate || today()),
                 cnt = 0;
               for (const ph of vp.phases || [])
-                for (const g of gtOf(vp.id).filter((g) => g.phaseId === ph.id)) {
+                for (const g of gtOf(vp.id).filter(
+                  (g) => g.phaseId === ph.id,
+                )) {
                   if (only && spansOf(g).length) {
                     if (lastDay(g) >= cur) cur = nextWorkDay(lastDay(g));
                     continue;
                   }
                   let end = cur;
-                  for (let k = 1; k < (g.daysHint || n); k++) end = nextWorkDay(end);
+                  for (let k = 1; k < (g.daysHint || n); k++)
+                    end = nextWorkDay(end);
                   setSpans(g, [{ from: cur, to: end }]);
                   put("gtasks", g);
                   syncBlocksFromSpans(g);
@@ -5857,7 +6906,9 @@
               return;
             }
             setGtProgress(g, a.checked ? 100 : -1);
-            gtCommit(`${a.checked ? "Completed" : "Reopened"} project task "${g.title}"`);
+            gtCommit(
+              `${a.checked ? "Completed" : "Reopened"} project task "${g.title}"`,
+            );
             break;
           }
           case "editvp":
@@ -5878,7 +6929,9 @@
             const p = vp.phases.find((x) => x.id === ph);
             if (ed)
               askText("Rename phase", "Phase name", p.name, (v) => {
-                vp.phases = vp.phases.map((x) => (x.id === ph ? { ...x, name: v } : x));
+                vp.phases = vp.phases.map((x) =>
+                  x.id === ph ? { ...x, name: v } : x,
+                );
                 put("vprojects", vp);
                 commit(`Renamed phase "${p.name}" to "${v}" in ${vp.name}`);
               });
@@ -5920,10 +6973,13 @@
               j = i + +a.dataset.d;
             if (j < 0 || j >= L.length) break;
             [L[i].order, L[j].order] = [L[j].order, L[i].order];
-            if (L[i].order === L[j].order) L[j].order += a.dataset.d > 0 ? 1 : -1;
+            if (L[i].order === L[j].order)
+              L[j].order += a.dataset.d > 0 ? 1 : -1;
             put("gtasks", L[i]);
             put("gtasks", L[j]);
-            commit(`Reordered "${g.title}" in ${get("vprojects", g.vpId).name}`);
+            commit(
+              `Reordered "${g.title}" in ${get("vprojects", g.vpId).name}`,
+            );
             break;
           }
           case "autofill":
@@ -5955,7 +7011,11 @@
                 name: p.name,
                 tasks: ts
                   .filter((g) => g.phaseId === p.id)
-                  .map((g) => ({ title: g.title, roleHint: g.roleHint || "", days: workDaysOf(g) || null })),
+                  .map((g) => ({
+                    title: g.title,
+                    roleHint: g.roleHint || "",
+                    days: workDaysOf(g) || null,
+                  })),
               })),
             });
             commit(`Saved "${vp.name}" as the default validation template`);
@@ -6007,7 +7067,11 @@
         if (!c) return;
         e.stopImmediatePropagation();
         const g = get("gtasks", c.dataset.gtask);
-        if (!g || !canEditVP(get("vprojects", g.vpId)) || c.getAttribute("draggable") !== "true") {
+        if (
+          !g ||
+          !canEditVP(get("vprojects", g.vpId)) ||
+          c.getAttribute("draggable") !== "true"
+        ) {
           e.preventDefault();
           return;
         }
@@ -6026,7 +7090,12 @@
         $$(".over").forEach((x) => x.classList.remove("over"));
         if (!s) return;
         e.preventDefault();
-        scheduleGtask(raw.slice(6), s.dataset.staff, s.dataset.date, s.dataset.slot);
+        scheduleGtask(
+          raw.slice(6),
+          s.dataset.staff,
+          s.dataset.date,
+          s.dataset.slot,
+        );
       });
 
       /* --- Task list: validation-project tasks --- */
@@ -6036,7 +7105,10 @@
         const fv = $("#fVp"),
           keep = fv.value;
         fv.innerHTML = `<option value="">All validation projects</option>${vpList()
-          .map((v) => `<option value="${v.id}">${esc(v.name)}${vpActive(v) ? "" : " (completed)"}</option>`)
+          .map(
+            (v) =>
+              `<option value="${v.id}">${esc(v.name)}${vpActive(v) ? "" : " (completed)"}</option>`,
+          )
           .join("")}`;
         fv.value = vpList().some((v) => v.id === keep) ? keep : "";
         const q = $("#q").value.trim().toLowerCase(),
@@ -6047,7 +7119,12 @@
             const vp = get("vprojects", g.vpId);
             if (!vp || vp.deleted) return false;
             if (fv.value ? g.vpId !== fv.value : !vpActive(vp)) return false;
-            if (q && !(g.title + " " + vp.name + " " + phaseName(vp, g.phaseId)).toLowerCase().includes(q))
+            if (
+              q &&
+              !(g.title + " " + vp.name + " " + phaseName(vp, g.phaseId))
+                .toLowerCase()
+                .includes(q)
+            )
               return false;
             const done = (g.progress || 0) >= 100;
             if (fs === "open") return !done;
@@ -6059,7 +7136,8 @@
           })
           .sort(
             (a, b) =>
-              (lastDay(a) || "9999").localeCompare(lastDay(b) || "9999") || a.title.localeCompare(b.title),
+              (lastDay(a) || "9999").localeCompare(lastDay(b) || "9999") ||
+              a.title.localeCompare(b.title),
           );
         el.innerHTML = rows.length
           ? `<table><thead><tr><th style="width:34px">Done</th><th>Task</th><th>Validation project</th><th>Assigned</th><th style="width:180px">Progress</th><th>Days</th><th>Dates</th><th>Deadline (last day)</th><th></th></tr></thead><tbody>${rows
@@ -6095,7 +7173,8 @@
         let crc = -1;
         for (let i = 0; i < u8.length; i++) {
           let c = (crc ^ u8[i]) & 255;
-          for (let k = 0; k < 8; k++) c = c & 1 ? (c >>> 1) ^ 0xedb88320 : c >>> 1;
+          for (let k = 0; k < 8; k++)
+            c = c & 1 ? (c >>> 1) ^ 0xedb88320 : c >>> 1;
           crc = (crc >>> 8) ^ c;
         }
         return (crc ^ -1) >>> 0;
@@ -6105,7 +7184,10 @@
           parts = [],
           central = [];
         const now = new Date(),
-          dt = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate(),
+          dt =
+            ((now.getFullYear() - 1980) << 9) |
+            ((now.getMonth() + 1) << 5) |
+            now.getDate(),
           tm = (now.getHours() << 11) | (now.getMinutes() << 5);
         let off = 0;
         for (const f of files) {
@@ -6122,7 +7204,9 @@
             [18, data.length, 4],
             [22, data.length, 4],
             [26, name.length, 2],
-          ].forEach(([o, v, n]) => (n === 4 ? L.setUint32(o, v, true) : L.setUint16(o, v, true)));
+          ].forEach(([o, v, n]) =>
+            n === 4 ? L.setUint32(o, v, true) : L.setUint16(o, v, true),
+          );
           parts.push(new Uint8Array(L.buffer), name, data);
           const C = new DataView(new ArrayBuffer(46));
           [
@@ -6136,7 +7220,9 @@
             [24, data.length, 4],
             [28, name.length, 2],
             [42, off, 4],
-          ].forEach(([o, v, n]) => (n === 4 ? C.setUint32(o, v, true) : C.setUint16(o, v, true)));
+          ].forEach(([o, v, n]) =>
+            n === 4 ? C.setUint32(o, v, true) : C.setUint16(o, v, true),
+          );
           central.push(new Uint8Array(C.buffer), name);
           off += 30 + name.length + data.length;
         }
@@ -6158,15 +7244,19 @@
         const X = (s) =>
           String(s ?? "").replace(
             /[&<>"]/g,
-            (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
+            (c) =>
+              ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
           );
         const colName = (n) => {
           let s = "";
-          for (n++; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s;
+          for (n++; n > 0; n = Math.floor((n - 1) / 26))
+            s = String.fromCharCode(65 + ((n - 1) % 26)) + s;
           return s;
         };
         const serial = (d) =>
-          (Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) - Date.UTC(1899, 11, 30)) / 864e5;
+          (Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) -
+            Date.UTC(1899, 11, 30)) /
+          864e5;
         const hex = vpColor(vp).replace("#", "").toUpperCase();
         /* style ids: 0 normal,1 title,2 bold,3 date,4 header,5 phase,6 pct,7 bar,8 bar-done,9 day,10 today,11 off,12 hint,13 row date,14 centre,15 week */
         const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -6201,16 +7291,23 @@
         put1(1, 1, vp.name, 1);
         put1(2, 1, `Supervisor: ${vp.supervisor || "—"}`);
         put1(3, 1, `Project Lead: ${vp.leadId ? staffName(vp.leadId) : "—"}`);
-        put1(4, 1, `Bench Lead: ${vp.benchLeadId ? staffName(vp.benchLeadId) : "—"}`);
+        put1(
+          4,
+          1,
+          `Bench Lead: ${vp.benchLeadId ? staffName(vp.benchLeadId) : "—"}`,
+        );
         put1(2, 2, "Project Start:", 2);
         put1(2, 3, serial(vp.startDate || td), 3, "n");
         put1(3, 2, "Exported:", 2);
         put1(3, 3, serial(td), 3, "n");
-        ["TASK", "ASSIGNED TO", "PROGRESS", "START", "END", "DAYS"].forEach((h, i) => put1(6, 1 + i, h, 4));
+        ["TASK", "ASSIGNED TO", "PROGRESS", "START", "END", "DAYS"].forEach(
+          (h, i) => put1(6, 1 + i, h, 4),
+        );
         cols.forEach((d, i) => {
           const c = T0 + i,
             st = d === td ? 10 : workDay(d) ? 9 : 11;
-          if (i === 0 || wdIdx(d) === 0) put1(4, c, `Week of ${md(d)}, ${d.slice(0, 4)}`, 15);
+          if (i === 0 || wdIdx(d) === 0)
+            put1(4, c, `Week of ${md(d)}, ${d.slice(0, 4)}`, 15);
           put1(5, c, +d.slice(8), st, "n");
           put1(6, c, DAYN[wdIdx(d)][0], st);
         });
@@ -6224,7 +7321,12 @@
           for (const g of ts.filter((g) => g.phaseId === ph.id)) {
             const who = [...teamOf(g).map(staffName), ...rolesOf(g)].join(", ");
             put1(r, 1, g.title);
-            put1(r, 2, who || (g.roleHint ? `(${g.roleHint})` : ""), who ? 0 : 12);
+            put1(
+              r,
+              2,
+              who || (g.roleHint ? `(${g.roleHint})` : ""),
+              who ? 0 : 12,
+            );
             put1(r, 3, (g.progress || 0) / 100, 6, "n");
             if (spansOf(g).length) {
               put1(r, 4, serial(firstDay(g)), 13, "n");
@@ -6237,7 +7339,9 @@
               return b < a ? [] : [...Array(b - a + 1)].map((_, k) => a + k);
             });
             const k = Math.floor((cells.length * (g.progress || 0)) / 100);
-            cells.forEach((i, n) => put1(r, T0 + i, "", n < k ? 8 : workDay(cols[i]) ? 7 : 11));
+            cells.forEach((i, n) =>
+              put1(r, T0 + i, "", n < k ? 8 : workDay(cols[i]) ? 7 : 11),
+            );
             r++;
           }
         }
@@ -6248,7 +7352,8 @@
           sheetRows += `<row r="${rn}">${cells
             .map((x) => {
               const ref = colName(x.c) + rn;
-              if (x.kind === "n") return `<c r="${ref}" s="${x.s}"><v>${x.v}</v></c>`;
+              if (x.kind === "n")
+                return `<c r="${ref}" s="${x.s}"><v>${x.v}</v></c>`;
               return x.v === ""
                 ? `<c r="${ref}" s="${x.s}"/>`
                 : `<c r="${ref}" s="${x.s}" t="inlineStr"><is><t xml:space="preserve">${X(x.v)}</t></is></c>`;
@@ -6257,14 +7362,21 @@
         }
         const widths = [3, 40, 24, 13, 13, 13, 8];
         const colsXml =
-          widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("") +
+          widths
+            .map(
+              (w, i) =>
+                `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`,
+            )
+            .join("") +
           `<col min="${T0 + 1}" max="${T0 + cols.length}" width="3.4" customWidth="1"/>`;
         const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
 <sheetViews><sheetView workbookViewId="0" showGridLines="0"><pane xSplit="${T0}" ySplit="6" topLeftCell="${colName(T0)}7" activePane="bottomRight" state="frozen"/></sheetView></sheetViews>
 <sheetFormatPr defaultRowHeight="15"/><cols>${colsXml}</cols><sheetData>${sheetRows}</sheetData>
 <pageMargins left="0.3" right="0.3" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup orientation="landscape"/></worksheet>`;
-        const sheetName = (vp.name.replace(/[\[\]:*?/\\]/g, " ").slice(0, 31) || "Gantt").trim();
+        const sheetName = (
+          vp.name.replace(/[\[\]:*?/\\]/g, " ").slice(0, 31) || "Gantt"
+        ).trim();
         return zipStore([
           {
             name: "[Content_Types].xml",
@@ -6300,6 +7412,7 @@
       /* ---------- events ---------- */
       /* actions a regular user may perform; everything else needs an administrator */
       const USER_ACTS = new Set([
+        "sidebar",
         "undo",
         "redo",
         "toggle",
@@ -6332,9 +7445,14 @@
           const st = e.target.closest(".stask");
           if (st) taskModal(st.dataset.task);
           const wi = e.target.closest("[data-weekly]");
-          if (wi) weeklyModal(get("weekly", wi.dataset.weekly).staffId, wi.dataset.weekly);
+          if (wi)
+            weeklyModal(
+              get("weekly", wi.dataset.weekly).staffId,
+              wi.dataset.weekly,
+            );
           const di = e.target.closest("[data-daily]");
-          if (di) dailyModal(get("daily", di.dataset.daily).date, di.dataset.daily);
+          if (di)
+            dailyModal(get("daily", di.dataset.daily).date, di.dataset.daily);
           return;
         }
         if (m) m.open = false;
@@ -6357,7 +7475,11 @@
             break;
           }
           case "quick":
-            quickModal(slot.dataset.staff, slot.dataset.date, slot.dataset.slot);
+            quickModal(
+              slot.dataset.staff,
+              slot.dataset.date,
+              slot.dataset.slot,
+            );
             break;
           case "addweekly":
             weeklyModal(a.closest(".wcell").dataset.staff);
@@ -6370,7 +7492,9 @@
             break;
           case "addrecurring": {
             const n = ensureRecurring(weekStart);
-            commit(`Added ${n} recurring task occurrence${n > 1 ? "s" : ""} for week of ${weekStart}`);
+            commit(
+              `Added ${n} recurring task occurrence${n > 1 ? "s" : ""} for week of ${weekStart}`,
+            );
             break;
           }
           case "prev":
@@ -6460,7 +7584,11 @@
             } else render();
             break;
           case "backup":
-            dl(`team-planner-backup-${today()}.json`, dataJSON(DB), "application/json");
+            dl(
+              `team-planner-backup-${today()}.json`,
+              dataJSON(DB),
+              "application/json",
+            );
             break;
           case "archive":
             runArchive(true);
@@ -6500,7 +7628,14 @@
           return;
         }
         if (!ab) {
-          put("absences", { id: uid(), staffId: staff, from: date, to: date, part: slot, reason: "" });
+          put("absences", {
+            id: uid(),
+            staffId: staff,
+            from: date,
+            to: date,
+            part: slot,
+            reason: "",
+          });
           commit(`${staffName(staff)} out of office ${date} ${slot}`);
         } else if (ab.from === ab.to && ab.part === slot) {
           del("absences", ab.id);
@@ -6512,9 +7647,14 @@
         } else absenceModal(staff, date);
       });
       document.addEventListener("dragstart", (e) => {
-        const c = e.target.closest && e.target.closest("[data-block],[data-task],[data-weekly],[data-daily]");
+        const c =
+          e.target.closest &&
+          e.target.closest(
+            "[data-block],[data-task],[data-weekly],[data-daily]",
+          );
         if (!c) return;
-        if (!isAdmin()) {
+        /* everyone can schedule and move tasks; weekly and joint items stay admin-only */
+        if (!isAdmin() && (c.dataset.weekly || c.dataset.daily)) {
           e.preventDefault();
           return;
         }
@@ -6522,7 +7662,17 @@
           e.preventDefault();
           return;
         }
-        dragKind = c.dataset.weekly ? "weekly" : c.dataset.daily ? "daily" : "slot";
+        dragKind = c.dataset.weekly
+          ? "weekly"
+          : c.dataset.daily
+            ? "daily"
+            : "slot";
+        dragBack = false;
+        if (c.dataset.block) {
+          const b = get("blocks", c.dataset.block),
+            t = b && get("tasks", b.taskId);
+          dragBack = !!(b && t && !b.done && !t.completedAt && !t.gtaskId);
+        }
         dragging = true;
         e.dataTransfer.setData(
           "text/plain",
@@ -6539,18 +7689,27 @@
       });
       document.addEventListener("dragend", (e) => {
         dragging = false;
-        $$(".over,.dragging").forEach((x) => x.classList.remove("over", "dragging"));
+        dragBack = false;
+        $$(".over,.dragging").forEach((x) =>
+          x.classList.remove("over", "dragging"),
+        );
         if (deferred) render();
       });
       document.addEventListener("dragover", (e) => {
-        const tb = e.target.closest && e.target.closest('nav.tabs button[data-tab="cal"]');
+        const tb =
+          e.target.closest &&
+          e.target.closest('nav.tabs button[data-tab="cal"]');
         if (tb && prefs.tab !== "cal") {
           prefs.tab = "cal";
           savePrefs();
           render();
         }
         const s =
-          e.target.closest && e.target.closest({ weekly: ".wcell", daily: ".dcell" }[dragKind] || ".slot");
+          e.target.closest &&
+          (e.target.closest(
+            { weekly: ".wcell", daily: ".dcell" }[dragKind] || ".slot",
+          ) ||
+            (dragBack && e.target.closest("#sidebar")));
         if (s) {
           e.preventDefault();
           e.dataTransfer.dropEffect = "move";
@@ -6561,9 +7720,10 @@
         }
       });
       document.addEventListener("drop", (e) => {
-        if (!isAdmin()) return;
+        if (!meId) return;
         const nt = e.target.closest(".wcell,.dcell");
         if (nt) {
+          if (!isAdmin()) return;
           e.preventDefault();
           dragging = false;
           nt.classList.remove("over");
@@ -6573,7 +7733,9 @@
             if (w && w.staffId !== nt.dataset.staff) {
               w.staffId = nt.dataset.staff;
               put("weekly", w);
-              commit(`Moved weekly task "${w.title}" to ${staffName(w.staffId)}`);
+              commit(
+                `Moved weekly task "${w.title}" to ${staffName(w.staffId)}`,
+              );
             }
           }
           if (kind === "daily" && nt.matches(".dcell")) {
@@ -6586,18 +7748,51 @@
           }
           return;
         }
+        const side = e.target.closest("#sidebar");
+        if (side) {
+          e.preventDefault();
+          dragging = false;
+          side.classList.remove("over");
+          const [kind, id] = e.dataTransfer.getData("text/plain").split(":");
+          if (kind !== "block") return;
+          const b = get("blocks", id),
+            t = b && get("tasks", b.taskId);
+          if (!b || b.deleted || !t || b.done || t.completedAt || t.gtaskId)
+            return;
+          if (
+            b.staffIds.length > 1 &&
+            !confirm(
+              `"${t.title}" is a joint task. Take it off everyone's calendar (${b.staffIds.map(staffName).join(", ")})?`,
+            )
+          )
+            return;
+          del("blocks", b.id);
+          syncTaskDone(t.id);
+          commit(
+            `Moved "${t.title}" (${b.date} ${b.slot}) back to To schedule`,
+          );
+          return;
+        }
         const s = e.target.closest(".slot");
         if (!s) return;
         e.preventDefault();
         dragging = false;
         s.classList.remove("over");
-        const [kind, id, from] = e.dataTransfer.getData("text/plain").split(":");
+        const [kind, id, from] = e.dataTransfer
+          .getData("text/plain")
+          .split(":");
         const { staff, date, slot } = s.dataset;
         const ab = absenceAt(staff, date, slot);
         if (kind === "task") {
           const t = get("tasks", id);
           if (!t || t.deleted || t.completedAt) return;
-          if (ab && !confirm(`${staffName(staff)} is out of office then. Schedule anyway?`)) return;
+          if (
+            ab &&
+            !confirm(
+              `${staffName(staff)} is out of office then. Schedule anyway?`,
+            )
+          )
+            return;
           const need = Math.max(1, (t.duration || 1) - blocksOf(id).length);
           placeTask(id, [staff], date, slot, need, !!ab);
           syncTaskDone(id);
@@ -6606,8 +7801,13 @@
           );
         } else if (kind === "block") {
           const b = get("blocks", id);
-          if (!b || (b.date === date && b.slot === slot && from === staff)) return;
-          if (ab && !confirm(`${staffName(staff)} is out of office then. Move anyway?`)) return;
+          if (!b || (b.date === date && b.slot === slot && from === staff))
+            return;
+          if (
+            ab &&
+            !confirm(`${staffName(staff)} is out of office then. Move anyway?`)
+          )
+            return;
           if (from !== staff && !b.staffIds.includes(staff))
             b.staffIds = b.staffIds.map((x) => (x === from ? staff : x));
           b.date = date;
@@ -6622,7 +7822,9 @@
         $(s).addEventListener(s === "#q" ? "input" : "change", renderList),
       );
       $("#sumRange").addEventListener("change", renderSummary);
-      ["#sumFrom", "#sumTo"].forEach((x) => $(x).addEventListener("change", renderSummary));
+      ["#sumFrom", "#sumTo"].forEach((x) =>
+        $(x).addEventListener("change", renderSummary),
+      );
       $("#calProj").addEventListener("change", (e) => {
         prefs.project = e.target.value;
         savePrefs();
@@ -6644,7 +7846,8 @@
         if (!f || !isAdmin()) return;
         try {
           const d = unsealDB(JSON.parse(await f.text()));
-          if (!d || !Array.isArray(d.tasks)) throw new Error("Not a Team Planner data file");
+          if (!d || !Array.isArray(d.tasks))
+            throw new Error("Not a Team Planner data file");
           DB = mergeDB(d, DB);
           rebuildShadow();
           commit(`Imported data from ${f.name}`);
@@ -6658,10 +7861,10 @@
         modal(
           "How to use",
           `<div style="font-size:13px;line-height:1.55">
-  <b>Calendar</b> — each person has an AM and a PM slot per day. Drag tasks between people and days. Click “+” in a slot to add a task; tick several people to make it a joint task (👥). Tick the box on a task to mark that half-day complete; a task is complete when all its half-days are. Double-click an empty slot to mark someone out (double-click again to undo), or use ✈ for date ranges. For staff on a 4-day week or 9/80 schedule, choose “Repeats” in ✈ Out of office (every week or every 2 weeks); ↻ next to their name shows the pattern, and double-clicking one of their flex half-days keeps them in on just that date.<br><br>
+  <b>Calendar</b> — each person has an AM and a PM slot per day. Drag tasks between people and days, or drag an unfinished half-day back onto the To-schedule panel to unschedule it. Click “+” in a slot to add a task; tick several people to make it a joint task (👥). Tick the box on a task to mark that half-day complete; a task is complete when all its half-days are. Double-click an empty slot to mark someone out (double-click again to undo), or use ✈ for date ranges. For staff on a 4-day week or 9/80 schedule, choose “Repeats” in ✈ Out of office (every week or every 2 weeks); ↻ next to their name shows the pattern, and double-clicking one of their flex half-days keeps them in on just that date.<br><br>
   <b>Weekly tasks</b> (column next to the names) — things a person covers all week, e.g. room preventive maintenance. No completion box. “⧉ last week” copies last week's into this week. <b>Daily joint tasks</b> (row under the dates) — lab meetings and similar; leave people unticked for everyone. Tick “Holiday” to mark everyone out of office (full or half day, single date or range). Both can be dragged to another person or day.<br><br>
   <b>Task list</b> — set priority, duration in half-days, and deadline. Drag a row onto the “Weekly calendar” tab, then drop it on a slot; multi-half-day tasks fill consecutive half-days, skipping weekends and time out of office. Recurring tasks are added to a week only when you click “↻ Add recurring tasks” in the calendar's To-schedule panel.<br><br>
-  <b>Logging in & roles</b> — everyone logs in with their name and a personal 6-digit PIN (created the first time they log in). <b>Administrators</b> can do everything: assign, move and edit tasks, manage weekly/joint tasks and holidays, view the Summary tab, add or remove staff, change roles and reset PINs (Staff button). <b>Users</b> can tick tasks complete and add notes; they see the calendar and task list but can't change the schedule. 💬 shows how many notes a task has. You're logged out after ${IDLE_MIN} minutes without activity. Names, roles and PINs are stored sealed in the data file, so editing them by hand doesn't work — a changed record is locked until an administrator uses Reset in Staff. Keep at least two administrators, and if one is ever lost, restore the data file from the <b>backups</b> folder.<br><br>
+  <b>Logging in & roles</b> — everyone logs in with their name and a personal 6-digit PIN (created the first time they log in). <b>Administrators</b> can do everything: assign, move and edit tasks, manage weekly/joint tasks and holidays, view the Summary tab, add or remove staff, change roles and reset PINs (Staff button). <b>Users</b> can tick tasks complete, add notes, open the To-schedule panel and drag tasks onto or around the calendar; they can't create, edit or delete tasks, or manage weekly/joint tasks, holidays and out-of-office. 💬 shows how many notes a task has. You're logged out after ${IDLE_MIN} minutes without activity. Names, roles and PINs are stored sealed in the data file, so editing them by hand doesn't work — a changed record is locked until an administrator uses Reset in Staff. Keep at least two administrators, and if one is ever lost, restore the data file from the <b>backups</b> folder.<br><br>
   <b>Validations</b> — each validation project has a Gantt chart that starts from the lab's template (R&D → Validation Plan → Validation Runs → Report → Checklist → Review). Administrators create projects; the named project lead can edit that project's chart too. Use the “Assigned to” dropdown to pick team members and/or BINFX, QA or Director (outside reviewers aren't on the calendar or in the Summary). Plan in whole days: drag across a row to add a date block — a task can have several — and drag blocks to move or resize them. Every working day of a task with team members shows on their calendar as AM and PM half-days; moving, reassigning or removing those on the calendar updates the Gantt chart, and ticking them updates progress. “★ My tasks” lists everything assigned to you. Export to Excel gives a copy in the template's layout.<br><br>
   <b>Undo / Redo</b> — ↶ Undo (Ctrl+Z) reverses <i>your own</i> most recent change; click again to go further back (up to ${UNDO_MAX} changes, kept ${UNDO_DAYS} days, and it works after logging out or on another PC). ↷ Redo (Ctrl+Y) re-applies what you undid, until you make a new change. If a colleague has edited the same item since, you'll be told who and asked before their edit is overwritten. Hover the buttons to see which change they'll affect.<br><br>
   <b>Archiving</b> — to keep the shared file small and fast, completed work older than ${ARCHIVE_MONTHS} months is moved automatically into yearly files (<code>team-planner-archive-YYYY.json</code>) in the same folder. Open and unfinished tasks are never archived. The Summary tab reads the archives whenever the chosen period reaches back that far. Administrators can also run it from the ⋯ menu.<br><br>
